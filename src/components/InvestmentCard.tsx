@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -50,15 +49,11 @@ export function InvestmentCard() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           Investimentos
         </CardTitle>
-        <Button size="sm" variant="outline">
-          <Plus className="h-4 w-4 mr-1" />
-          Novo
-        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {mockInvestments.map((investment) => (
@@ -96,7 +91,7 @@ export function InvestmentCard() {
         {mockInvestments.length === 0 && (
           <div className="text-center text-muted-foreground py-4">
             <p>Nenhum investimento cadastrado</p>
-            <p className="text-sm mt-1">Comece criando seu primeiro investimento</p>
+            <p className="text-sm mt-1">Use o botão "Nova Transação" para adicionar</p>
           </div>
         )}
       </CardContent>

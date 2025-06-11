@@ -7,6 +7,11 @@ export interface Transaction {
   date: Date;
   walletId: string;
   userId: string;
+  recurrence?: {
+    type: 'none' | 'monthly' | 'weekly' | 'yearly' | 'custom';
+    repetitions?: number;
+    endDate?: Date;
+  };
 }
 
 export interface Wallet {
@@ -29,6 +34,11 @@ export interface TransactionFormData {
   date: Date;
   walletId: string;
   userId: string;
+  recurrence?: {
+    type: 'none' | 'monthly' | 'weekly' | 'yearly' | 'custom';
+    repetitions?: number;
+    endDate?: Date;
+  };
 }
 
 export interface TransactionFilters {

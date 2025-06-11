@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Transaction, Wallet, TransactionFilters, User } from '@/types/transaction';
 
@@ -27,7 +26,7 @@ const mockUsers: User[] = [
 
 const mockWallets: Wallet[] = [
   { id: '1', name: 'Carteira Principal', balance: 1250.00 },
-  { id: '2', name: 'Poupança', balance: 5000.00 },
+  { id: '2', name: 'Investimentos', balance: 5000.00 },
 ];
 
 const mockTransactions: Transaction[] = [
