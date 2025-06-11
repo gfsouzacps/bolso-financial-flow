@@ -1,13 +1,16 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Transaction, Wallet, TransactionFilters } from '@/types/transaction';
+import { Transaction, Wallet, TransactionFilters, User } from '@/types/transaction';
 
 interface TransactionContextType {
   transactions: Transaction[];
   wallets: Wallet[];
+  users: User[];
   filters: TransactionFilters;
+  currentUser: User | null;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   updateFilters: (filters: Partial<TransactionFilters>) => void;
+  setCurrentUser: (user: User) => void;
   getFilteredTransactions: () => Transaction[];
   getTotalBalance: () => number;
   getIncomeTotal: () => number;
@@ -17,6 +20,11 @@ interface TransactionContextType {
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
 // Mock data for demonstration
+const mockUsers: User[] = [
+  { id: '1', name: 'Você', color: 'bg-blue-500' },
+  { id: '2', name: 'Sua Esposa', color: 'bg-pink-500' },
+];
+
 const mockWallets: Wallet[] = [
   { id: '1', name: 'Carteira Principal', balance: 1250.00 },
   { id: '2', name: 'Poupança', balance: 5000.00 },
@@ -29,7 +37,8 @@ const mockTransactions: Transaction[] = [
     amount: 3500.00,
     type: 'income',
     date: new Date('2024-06-01'),
-    walletId: '1'
+    walletId: '1',
+    userId: '1'
   },
   {
     id: '2',
@@ -37,7 +46,8 @@ const mockTransactions: Transaction[] = [
     amount: 250.00,
     type: 'expense',
     date: new Date('2024-06-05'),
-    walletId: '1'
+    walletId: '1',
+    userId: '2'
   },
   {
     id: '3',
@@ -45,7 +55,8 @@ const mockTransactions: Transaction[] = [
     amount: 800.00,
     type: 'income',
     date: new Date('2024-06-10'),
-    walletId: '1'
+    walletId: '1',
+    userId: '1'
   },
   {
     id: '4',
@@ -53,7 +64,8 @@ const mockTransactions: Transaction[] = [
     amount: 120.00,
     type: 'expense',
     date: new Date('2024-06-08'),
-    walletId: '1'
+    walletId: '1',
+    userId: '1'
   },
   {
     id: '5',
@@ -61,13 +73,16 @@ const mockTransactions: Transaction[] = [
     amount: 180.00,
     type: 'expense',
     date: new Date('2024-06-11'),
-    walletId: '1'
+    walletId: '1',
+    userId: '2'
   },
 ];
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
   const [wallets] = useState<Wallet[]>(mockWallets);
+  const [users] = useState<User[]>(mockUsers);
+  const [currentUser, setCurrentUser] = useState<User | null>(mockUsers[0]);
   const [filters, setFilters] = useState<TransactionFilters>({
     type: 'all'
   });
@@ -90,8 +105,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       const startDateMatch = !filters.startDate || transaction.date >= filters.startDate;
       const endDateMatch = !filters.endDate || transaction.date <= filters.endDate;
       const walletMatch = !filters.walletId || transaction.walletId === filters.walletId;
+      const userMatch = !filters.userId || transaction.userId === filters.userId;
 
-      return typeMatch && startDateMatch && endDateMatch && walletMatch;
+      return typeMatch && startDateMatch && endDateMatch && walletMatch && userMatch;
     });
   };
 
@@ -120,9 +136,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       value={{
         transactions,
         wallets,
+        users,
+        currentUser,
         filters,
         addTransaction,
         updateFilters,
+        setCurrentUser,
         getFilteredTransactions,
         getTotalBalance,
         getIncomeTotal,

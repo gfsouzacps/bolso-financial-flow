@@ -11,6 +11,7 @@ export const transactionSchema = z.object({
     required_error: 'Data é obrigatória',
   }),
   walletId: z.string().min(1, 'Carteira é obrigatória'),
+  userId: z.string().min(1, 'Usuário é obrigatório'),
 });
 
 export type TransactionFormData = z.infer<typeof transactionSchema>;

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { transactionSchema, TransactionFormData } from '@/lib/validations/transaction';
 import { useTransactions } from '@/contexts/TransactionContext';
@@ -18,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export function TransactionModal() {
   const [open, setOpen] = useState(false);
-  const { addTransaction, wallets } = useTransactions();
+  const { addTransaction, wallets, users, currentUser } = useTransactions();
   const { toast } = useToast();
 
   const form = useForm<TransactionFormData>({
@@ -29,6 +30,7 @@ export function TransactionModal() {
       type: 'expense',
       date: new Date(),
       walletId: wallets[0]?.id || '',
+      userId: currentUser?.id || users[0]?.id || '',
     },
   });
 
@@ -39,7 +41,14 @@ export function TransactionModal() {
       title: 'Transação adicionada',
       description: 'A transação foi registrada com sucesso.',
     });
-    form.reset();
+    form.reset({
+      description: '',
+      amount: 0,
+      type: 'expense',
+      date: new Date(),
+      walletId: wallets[0]?.id || '',
+      userId: currentUser?.id || users[0]?.id || '',
+    });
     setOpen(false);
   };
 
@@ -174,6 +183,38 @@ export function TransactionModal() {
                       {wallets.map((wallet) => (
                         <SelectItem key={wallet.id} value={wallet.id}>
                           {wallet.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="userId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pessoa</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione quem fez a transação" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-5 w-5">
+                              <AvatarFallback className={cn("text-white text-xs", user.color)}>
+                                {user.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            {user.name}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -1,6 +1,7 @@
 
 import { TransactionProvider } from '@/contexts/TransactionContext';
 import { Header } from '@/components/Header';
+import { UserSelector } from '@/components/UserSelector';
 import { BalanceCard } from '@/components/BalanceCard';
 import { TransactionFilters } from '@/components/TransactionFilters';
 import { TransactionList } from '@/components/TransactionList';
@@ -13,6 +14,7 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
           <Header />
+          <UserSelector />
           <BalanceCard />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

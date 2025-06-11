@@ -6,6 +6,7 @@ export interface Transaction {
   type: 'income' | 'expense';
   date: Date;
   walletId: string;
+  userId: string;
 }
 
 export interface Wallet {
@@ -14,12 +15,20 @@ export interface Wallet {
   balance: number;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  avatar?: string;
+  color: string;
+}
+
 export interface TransactionFormData {
   description: string;
   amount: number;
   type: 'income' | 'expense';
   date: Date;
   walletId: string;
+  userId: string;
 }
 
 export interface TransactionFilters {
@@ -27,4 +36,5 @@ export interface TransactionFilters {
   endDate?: Date;
   type?: 'income' | 'expense' | 'all';
   walletId?: string;
+  userId?: string;
 }
