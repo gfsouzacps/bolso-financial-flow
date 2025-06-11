@@ -2,25 +2,24 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
-import { CalendarIcon, Plus } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { transactionSchema, TransactionFormData } from '@/lib/validations/transaction';
 import { useTransactions } from '@/contexts/TransactionContext';
-import { useToast } from '@/hooks/use-toast';
+import { transactionSchema, type TransactionFormData } from '@/lib/validations/transaction';
 
 export function TransactionModal() {
   const [open, setOpen] = useState(false);
-  const { addTransaction, wallets, users, currentUser } = useTransactions();
-  const { toast } = useToast();
+  const { addTransaction, wallets, currentUser } = useTransactions();
 
   const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
@@ -29,36 +28,30 @@ export function TransactionModal() {
       amount: 0,
       type: 'expense',
       date: new Date(),
-      walletId: wallets[0]?.id || '',
-      userId: currentUser?.id || users[0]?.id || '',
+      walletId: '',
+      userId: currentUser?.id || '',
     },
   });
 
   const onSubmit = (data: TransactionFormData) => {
-    console.log('Adding transaction:', data);
-    addTransaction(data);
-    toast({
-      title: 'Transação adicionada',
-      description: 'A transação foi registrada com sucesso.',
-    });
-    form.reset({
-      description: '',
-      amount: 0,
-      type: 'expense',
-      date: new Date(),
-      walletId: wallets[0]?.id || '',
-      userId: currentUser?.id || users[0]?.id || '',
-    });
+    const transactionData = {
+      description: data.description,
+      amount: data.amount,
+      type: data.type,
+      date: data.date,
+      walletId: data.walletId,
+      userId: data.userId,
+    };
+    
+    addTransaction(transactionData);
+    form.reset();
     setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          size="lg"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
-        >
+        <Button size="lg" className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg">
           <Plus className="h-6 w-6" />
         </Button>
       </DialogTrigger>
@@ -75,7 +68,7 @@ export function TransactionModal() {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Almoço, Salário..." {...field} />
+                    <Input placeholder="Ex: Supermercado" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -126,49 +119,6 @@ export function TransactionModal() {
 
             <FormField
               control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "dd/MM/yyyy")
-                          ) : (
-                            <span>Selecione uma data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="walletId"
               render={({ field }) => (
                 <FormItem>
@@ -197,44 +147,60 @@ export function TransactionModal() {
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Pessoa</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione quem fez a transação" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-5 w-5">
-                              <AvatarFallback className={cn("text-white text-xs", user.color)}>
-                                {user.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {user.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Usuário</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={currentUser?.name || ''} disabled />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setOpen(false)}
-              >
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Data</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "dd/MM/yyyy", { locale: ptBR })
+                          ) : (
+                            <span>Selecione uma data</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        className="p-3"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
                 Cancelar
               </Button>
               <Button type="submit" className="flex-1">
-                Adicionar
+                Salvar
               </Button>
             </div>
           </form>

@@ -6,6 +6,8 @@ import { BalanceCard } from '@/components/BalanceCard';
 import { TransactionFilters } from '@/components/TransactionFilters';
 import { TransactionList } from '@/components/TransactionList';
 import { FinancialChart } from '@/components/FinancialChart';
+import { InvestmentCard } from '@/components/InvestmentCard';
+import { InsightsCard } from '@/components/InsightsCard';
 import { TransactionModal } from '@/components/TransactionModal';
 
 const Index = () => {
@@ -25,6 +27,12 @@ const Index = () => {
             <div className="lg:col-span-1">
               <FinancialChart />
             </div>
+          </div>
+          
+          {/* Nova seção com Investimentos e Insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <InvestmentCard />
+            <InsightsCard />
           </div>
           
           <TransactionModal />
