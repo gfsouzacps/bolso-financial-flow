@@ -60,7 +60,11 @@ export function TransactionModal() {
       date: data.date,
       walletId: data.walletId,
       userId: data.userId,
-      recurrence: data.recurrence,
+      recurrence: {
+        type: data.recurrence?.type || 'none',
+        repetitions: data.recurrence?.repetitions,
+        endDate: data.recurrence?.endDate,
+      },
     };
     
     // Salvar últimas seleções
