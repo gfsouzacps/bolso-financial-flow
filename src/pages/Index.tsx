@@ -1,13 +1,34 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { TransactionProvider } from '@/contexts/TransactionContext';
+import { Header } from '@/components/Header';
+import { BalanceCard } from '@/components/BalanceCard';
+import { TransactionFilters } from '@/components/TransactionFilters';
+import { TransactionList } from '@/components/TransactionList';
+import { FinancialChart } from '@/components/FinancialChart';
+import { TransactionModal } from '@/components/TransactionModal';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <TransactionProvider>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <Header />
+          <BalanceCard />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-2">
+              <TransactionFilters />
+              <TransactionList />
+            </div>
+            <div className="lg:col-span-1">
+              <FinancialChart />
+            </div>
+          </div>
+          
+          <TransactionModal />
+        </div>
       </div>
-    </div>
+    </TransactionProvider>
   );
 };
 
