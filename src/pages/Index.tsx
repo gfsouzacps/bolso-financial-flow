@@ -14,23 +14,24 @@ const Index = () => {
   return (
     <TransactionProvider>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="container mx-auto px-4 py-4 sm:py-8 max-w-6xl">
           <Header />
           <UserSelector />
           <BalanceCard />
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2">
+          {/* Layout responsivo principal */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="lg:col-span-2 order-1 lg:order-1">
               <TransactionFilters />
               <TransactionList />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 order-2 lg:order-2">
               <FinancialChart />
             </div>
           </div>
           
-          {/* Nova seção com Investimentos e Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Seção de Investimentos e Insights - empilhados em mobile */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <InvestmentCard />
             <InsightsCard />
           </div>

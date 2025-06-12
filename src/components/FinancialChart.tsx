@@ -43,12 +43,12 @@ export function FinancialChart() {
 
   if (income === 0 && expense === 0) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
-          <CardTitle>Visão Geral</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Visão Geral</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground">
+          <div className="text-center text-muted-foreground py-8">
             <p>Nenhuma transação para exibir</p>
           </div>
         </CardContent>
@@ -57,44 +57,46 @@ export function FinancialChart() {
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle>Visão Geral</CardTitle>
+        <CardTitle className="text-lg sm:text-xl">Visão Geral</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={40}
-              outerRadius={80}
-              paddingAngle={5}
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              verticalAlign="bottom" 
-              height={36}
-              formatter={(value, entry) => (
-                <span style={{ color: entry.color }}>{value}</span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="h-64 sm:h-72 lg:h-64 xl:h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={30}
+                outerRadius={60}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend 
+                verticalAlign="bottom" 
+                height={36}
+                formatter={(value, entry) => (
+                  <span style={{ color: entry.color }}>{value}</span>
+                )}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Total Entradas</p>
-            <p className="text-lg font-semibold text-income">{formatCurrency(income)}</p>
+            <p className="text-base sm:text-lg font-semibold text-income">{formatCurrency(income)}</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Total Saídas</p>
-            <p className="text-lg font-semibold text-expense">{formatCurrency(expense)}</p>
+            <p className="text-base sm:text-lg font-semibold text-expense">{formatCurrency(expense)}</p>
           </div>
         </div>
       </CardContent>
