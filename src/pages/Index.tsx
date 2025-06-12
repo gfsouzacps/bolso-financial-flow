@@ -15,7 +15,6 @@ import { SpeedDialFAB } from '@/components/SpeedDialFAB';
 import { ExpenseModal } from '@/components/ExpenseModal';
 import { IncomeModal } from '@/components/IncomeModal';
 import { RecurringModal } from '@/components/RecurringModal';
-import { TransferModal } from '@/components/TransferModal';
 import { ChatModal } from '@/components/ChatModal';
 
 const Index = () => {
@@ -23,7 +22,6 @@ const Index = () => {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [incomeModalOpen, setIncomeModalOpen] = useState(false);
   const [recurringModalOpen, setRecurringModalOpen] = useState(false);
-  const [transferModalOpen, setTransferModalOpen] = useState(false);
 
   if (showRecurringDetails) {
     return (
@@ -72,14 +70,12 @@ const Index = () => {
             onExpenseClick={() => setExpenseModalOpen(true)}
             onIncomeClick={() => setIncomeModalOpen(true)}
             onRecurringClick={() => setRecurringModalOpen(true)}
-            onTransferClick={() => setTransferModalOpen(true)}
           />
           
           {/* Modais */}
           <ExpenseModal open={expenseModalOpen} onOpenChange={setExpenseModalOpen} />
           <IncomeModal open={incomeModalOpen} onOpenChange={setIncomeModalOpen} />
           <RecurringModal open={recurringModalOpen} onOpenChange={setRecurringModalOpen} />
-          <TransferModal open={transferModalOpen} onOpenChange={setTransferModalOpen} />
           <ChatModal />
         </div>
       </div>

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Minus, ArrowRightLeft, RefreshCcw, X } from 'lucide-react';
+import { Plus, Minus, RefreshCcw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -8,14 +8,12 @@ interface SpeedDialFABProps {
   onExpenseClick: () => void;
   onIncomeClick: () => void;
   onRecurringClick: () => void;
-  onTransferClick: () => void;
 }
 
 export function SpeedDialFAB({ 
   onExpenseClick, 
   onIncomeClick, 
-  onRecurringClick, 
-  onTransferClick 
+  onRecurringClick 
 }: SpeedDialFABProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -41,16 +39,6 @@ export function SpeedDialFAB({
         "flex flex-col-reverse gap-3 mb-3 transition-all duration-300",
         isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
       )}>
-        {/* Transferência */}
-        <Button
-          size="lg"
-          variant="secondary"
-          className="h-12 w-12 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 text-white"
-          onClick={() => handleAction(onTransferClick)}
-        >
-          <ArrowRightLeft className="h-5 w-5" />
-        </Button>
-        
         {/* Recorrente */}
         <Button
           size="lg"
