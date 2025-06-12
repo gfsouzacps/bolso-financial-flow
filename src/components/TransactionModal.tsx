@@ -26,7 +26,7 @@ export function TransactionModal() {
   const [lastWalletId, setLastWalletId] = useState<string>('');
   const [lastUserId, setLastUserId] = useState<string>('');
   
-  const { addTransaction, wallets, currentUser, investmentCategories } = useTransactions();
+  const { addTransaction, wallets, currentUser, investmentCategories, transactionCategories } = useTransactions();
 
   const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
@@ -38,6 +38,7 @@ export function TransactionModal() {
       walletId: lastWalletId || '',
       userId: currentUser?.id || '',
       categoryId: '',
+      transactionCategoryId: '',
       recurrence: {
         type: 'none',
         isInfinite: false,
@@ -64,6 +65,7 @@ export function TransactionModal() {
       walletId: data.walletId,
       userId: data.userId,
       categoryId: data.categoryId,
+      transactionCategoryId: data.transactionCategoryId,
       recurrence: {
         type: data.recurrence?.type || 'none',
         repetitions: data.recurrence?.repetitions,
@@ -82,9 +84,10 @@ export function TransactionModal() {
       amount: 0,
       type: 'expense',
       date: new Date(),
-      walletId: data.walletId, // Manter última carteira
-      userId: data.userId, // Manter último usuário
+      walletId: data.walletId,
+      userId: data.userId,
       categoryId: '',
+      transactionCategoryId: '',
       recurrence: {
         type: 'none',
         isInfinite: false,
@@ -97,7 +100,13 @@ export function TransactionModal() {
   const recurrenceType = form.watch('recurrence.type');
   const isInfiniteRecurrence = form.watch('recurrence.isInfinite');
   const selectedWallet = form.watch('walletId');
+  const selectedType = form.watch('type');
   const isInvestmentWallet = wallets.find(w => w.id === selectedWallet)?.name === 'Investimentos';
+
+  // Filtrar categorias baseado no tipo selecionado
+  const availableCategories = transactionCategories.filter(category => 
+    category.type === selectedType || category.type === 'both'
+  );
 
   return (
     <TooltipProvider>
@@ -162,6 +171,32 @@ export function TransactionModal() {
                       <SelectContent>
                         <SelectItem value="income">Entrada</SelectItem>
                         <SelectItem value="expense">Saída</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Campo de Categoria de Transação */}
+              <FormField
+                control={form.control}
+                name="transactionCategoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availableCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

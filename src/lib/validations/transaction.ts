@@ -20,6 +20,7 @@ export const transactionSchema = z.object({
   walletId: z.string().min(1, 'Carteira é obrigatória'),
   userId: z.string().min(1, 'Usuário é obrigatório'),
   categoryId: z.string().optional(),
+  transactionCategoryId: z.string().optional(),
   recurrence: recurrenceSchema,
 });
 

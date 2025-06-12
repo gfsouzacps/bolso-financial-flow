@@ -1,9 +1,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, TrendingDown, TrendingUp } from 'lucide-react';
+import { Calendar, TrendingDown, TrendingUp, ChevronRight } from 'lucide-react';
 import { useTransactions } from '@/contexts/TransactionContext';
 
-export function RecurringExpensesCard() {
+interface RecurringExpensesCardProps {
+  onClick?: () => void;
+}
+
+export function RecurringExpensesCard({ onClick }: RecurringExpensesCardProps) {
   const { getRecurringExpenses, getMonthlyIncome } = useTransactions();
   
   const { monthlyTotal, totalRemaining } = getRecurringExpenses();
@@ -19,11 +23,17 @@ export function RecurringExpensesCard() {
   };
 
   return (
-    <Card className="h-full">
+    <Card 
+      className={`h-full ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+      onClick={onClick}
+    >
       <CardHeader>
-        <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          Gastos a Prazo
+        <CardTitle className="text-lg sm:text-xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Gastos a Prazo
+          </div>
+          {onClick && <ChevronRight className="h-5 w-5 text-muted-foreground" />}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

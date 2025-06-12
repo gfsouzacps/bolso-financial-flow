@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { TransactionProvider } from '@/contexts/TransactionContext';
 import { Header } from '@/components/Header';
 import { UserSelector } from '@/components/UserSelector';
@@ -9,9 +10,25 @@ import { FinancialChart } from '@/components/FinancialChart';
 import { InvestmentCard } from '@/components/InvestmentCard';
 import { InsightsCard } from '@/components/InsightsCard';
 import { RecurringExpensesCard } from '@/components/RecurringExpensesCard';
+import { RecurringExpensesDetails } from '@/components/RecurringExpensesDetails';
 import { TransactionModal } from '@/components/TransactionModal';
+import { ChatModal } from '@/components/ChatModal';
 
 const Index = () => {
+  const [showRecurringDetails, setShowRecurringDetails] = useState(false);
+
+  if (showRecurringDetails) {
+    return (
+      <TransactionProvider>
+        <div className="min-h-screen bg-background">
+          <div className="container mx-auto px-4 py-4 sm:py-8 max-w-6xl">
+            <RecurringExpensesDetails onBack={() => setShowRecurringDetails(false)} />
+          </div>
+        </div>
+      </TransactionProvider>
+    );
+  }
+
   return (
     <TransactionProvider>
       <div className="min-h-screen bg-background">
@@ -33,7 +50,7 @@ const Index = () => {
           
           {/* Seção de Gastos Recorrentes */}
           <div className="mb-6 sm:mb-8">
-            <RecurringExpensesCard />
+            <RecurringExpensesCard onClick={() => setShowRecurringDetails(true)} />
           </div>
           
           {/* Seção de Investimentos e Insights - empilhados em mobile */}
@@ -43,6 +60,7 @@ const Index = () => {
           </div>
           
           <TransactionModal />
+          <ChatModal />
         </div>
       </div>
     </TransactionProvider>

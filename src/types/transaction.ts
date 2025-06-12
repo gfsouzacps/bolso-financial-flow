@@ -8,11 +8,12 @@ export interface Transaction {
   walletId: string;
   userId: string;
   categoryId?: string; // Para categorias de investimento
+  transactionCategoryId?: string; // Para categorias de transação normais
   recurrence?: {
     type: 'none' | 'monthly' | 'weekly' | 'yearly' | 'custom';
     repetitions?: number;
     endDate?: Date;
-    isInfinite?: boolean; // Para recorrência sem fim
+    isInfinite?: boolean;
   };
 }
 
@@ -38,6 +39,13 @@ export interface InvestmentCategory {
   createdAt: Date;
 }
 
+export interface TransactionCategory {
+  id: string;
+  name: string;
+  type: 'income' | 'expense' | 'both';
+  color: string;
+}
+
 export interface TransactionFormData {
   description: string;
   amount: number;
@@ -46,6 +54,7 @@ export interface TransactionFormData {
   walletId: string;
   userId: string;
   categoryId?: string;
+  transactionCategoryId?: string;
   recurrence?: {
     type: 'none' | 'monthly' | 'weekly' | 'yearly' | 'custom';
     repetitions?: number;
@@ -60,4 +69,13 @@ export interface TransactionFilters {
   type?: 'income' | 'expense' | 'all';
   walletId?: string;
   userId?: string;
+}
+
+export interface RecurringExpenseDetail {
+  id: string;
+  description: string;
+  monthlyAmount: number;
+  endDate?: Date;
+  isInfinite?: boolean;
+  totalRemaining: number;
 }

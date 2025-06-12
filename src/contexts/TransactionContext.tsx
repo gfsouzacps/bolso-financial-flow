@@ -1,12 +1,12 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Transaction, Wallet, TransactionFilters, User, InvestmentCategory } from '@/types/transaction';
+import { Transaction, Wallet, TransactionFilters, User, InvestmentCategory, TransactionCategory, RecurringExpenseDetail } from '@/types/transaction';
 
 interface TransactionContextType {
   transactions: Transaction[];
   wallets: Wallet[];
   users: User[];
   investmentCategories: InvestmentCategory[];
+  transactionCategories: TransactionCategory[];
   filters: TransactionFilters;
   currentUser: User | null;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
@@ -18,6 +18,8 @@ interface TransactionContextType {
   getIncomeTotal: () => number;
   getExpenseTotal: () => number;
   getRecurringExpenses: () => { monthlyTotal: number; totalRemaining: number };
+  getRecurringExpensesDetails: () => RecurringExpenseDetail[];
+  removeRecurringExpense: (transactionId: string) => void;
   getMonthlyIncome: () => number;
 }
 
@@ -30,8 +32,21 @@ const mockUsers: User[] = [
 ];
 
 const mockWallets: Wallet[] = [
-  { id: '1', name: 'Carteira Principal', balance: 1250.00 },
-  { id: '2', name: 'Investimentos', balance: 5000.00 },
+  { id: '1', name: 'Débito', balance: 1250.00 },
+  { id: '2', name: 'Crédito', balance: -500.00 },
+  { id: '3', name: 'Investimentos', balance: 5000.00 },
+];
+
+const mockTransactionCategories: TransactionCategory[] = [
+  { id: '1', name: 'Restaurante', type: 'expense', color: 'bg-red-500' },
+  { id: '2', name: 'Supermercado', type: 'expense', color: 'bg-green-500' },
+  { id: '3', name: 'Moradia', type: 'expense', color: 'bg-blue-500' },
+  { id: '4', name: 'Transporte', type: 'expense', color: 'bg-yellow-500' },
+  { id: '5', name: 'Lazer', type: 'expense', color: 'bg-purple-500' },
+  { id: '6', name: 'Saúde', type: 'expense', color: 'bg-pink-500' },
+  { id: '7', name: 'Educação', type: 'expense', color: 'bg-indigo-500' },
+  { id: '8', name: 'Salário', type: 'income', color: 'bg-green-600' },
+  { id: '9', name: 'Outras Receitas', type: 'income', color: 'bg-emerald-500' },
 ];
 
 const mockInvestmentCategories: InvestmentCategory[] = [
@@ -70,6 +85,7 @@ const mockTransactions: Transaction[] = [
     date: new Date('2024-06-01'),
     walletId: '1',
     userId: '1',
+    transactionCategoryId: '8',
     recurrence: {
       type: 'monthly',
       isInfinite: true
@@ -82,7 +98,8 @@ const mockTransactions: Transaction[] = [
     type: 'expense',
     date: new Date('2024-06-05'),
     walletId: '1',
-    userId: '2'
+    userId: '2',
+    transactionCategoryId: '2'
   },
   {
     id: '3',
@@ -91,7 +108,8 @@ const mockTransactions: Transaction[] = [
     type: 'income',
     date: new Date('2024-06-10'),
     walletId: '1',
-    userId: '1'
+    userId: '1',
+    transactionCategoryId: '9'
   },
   {
     id: '4',
@@ -101,6 +119,7 @@ const mockTransactions: Transaction[] = [
     date: new Date('2024-06-08'),
     walletId: '1',
     userId: '1',
+    transactionCategoryId: '3',
     recurrence: {
       type: 'monthly',
       repetitions: 36,
@@ -113,8 +132,9 @@ const mockTransactions: Transaction[] = [
     amount: 45.00,
     type: 'expense',
     date: new Date('2024-06-11'),
-    walletId: '1',
+    walletId: '2',
     userId: '2',
+    transactionCategoryId: '5',
     recurrence: {
       type: 'monthly',
       isInfinite: true
@@ -127,6 +147,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [wallets] = useState<Wallet[]>(mockWallets);
   const [users] = useState<User[]>(mockUsers);
   const [investmentCategories, setInvestmentCategories] = useState<InvestmentCategory[]>(mockInvestmentCategories);
+  const [transactionCategories] = useState<TransactionCategory[]>(mockTransactionCategories);
   const [currentUser, setCurrentUser] = useState<User | null>(mockUsers[0]);
   const [filters, setFilters] = useState<TransactionFilters>({
     type: 'all'
@@ -146,6 +167,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: Date.now().toString(),
     };
     setInvestmentCategories(prev => [...prev, newCategory]);
+  };
+
+  const removeRecurringExpense = (transactionId: string) => {
+    setTransactions(prev => prev.filter(t => t.id !== transactionId));
   };
 
   const updateFilters = (newFilters: Partial<TransactionFilters>) => {
@@ -225,6 +250,49 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     return { monthlyTotal, totalRemaining };
   };
 
+  const getRecurringExpensesDetails = (): RecurringExpenseDetail[] => {
+    const recurringExpenses = transactions.filter(t => 
+      t.type === 'expense' && 
+      t.recurrence && 
+      t.recurrence.type !== 'none'
+    );
+
+    return recurringExpenses.map(expense => {
+      let monthlyAmount = 0;
+      let totalRemaining = 0;
+
+      if (expense.recurrence) {
+        switch (expense.recurrence.type) {
+          case 'monthly':
+            monthlyAmount = expense.amount;
+            break;
+          case 'weekly':
+            monthlyAmount = expense.amount * 4.33;
+            break;
+          case 'yearly':
+            monthlyAmount = expense.amount / 12;
+            break;
+        }
+
+        if (expense.recurrence.isInfinite) {
+          totalRemaining = Infinity;
+        } else if (expense.recurrence.repetitions) {
+          const remainingMonths = expense.recurrence.repetitions - 1;
+          totalRemaining = monthlyAmount * remainingMonths;
+        }
+      }
+
+      return {
+        id: expense.id,
+        description: expense.description,
+        monthlyAmount,
+        endDate: expense.recurrence?.endDate,
+        isInfinite: expense.recurrence?.isInfinite || false,
+        totalRemaining
+      };
+    });
+  };
+
   const getMonthlyIncome = () => {
     const recurringIncome = transactions.filter(t => 
       t.type === 'income' && 
@@ -256,10 +324,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         wallets,
         users,
         investmentCategories,
+        transactionCategories,
         currentUser,
         filters,
         addTransaction,
         addInvestmentCategory,
+        removeRecurringExpense,
         updateFilters,
         setCurrentUser,
         getFilteredTransactions,
@@ -267,6 +337,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         getIncomeTotal,
         getExpenseTotal,
         getRecurringExpenses,
+        getRecurringExpensesDetails,
         getMonthlyIncome,
       }}
     >
