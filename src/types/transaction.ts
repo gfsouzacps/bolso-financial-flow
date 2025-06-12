@@ -7,10 +7,12 @@ export interface Transaction {
   date: Date;
   walletId: string;
   userId: string;
+  categoryId?: string; // Para categorias de investimento
   recurrence?: {
     type: 'none' | 'monthly' | 'weekly' | 'yearly' | 'custom';
     repetitions?: number;
     endDate?: Date;
+    isInfinite?: boolean; // Para recorrência sem fim
   };
 }
 
@@ -27,6 +29,15 @@ export interface User {
   color: string;
 }
 
+export interface InvestmentCategory {
+  id: string;
+  name: string;
+  goal: number;
+  current: number;
+  color: string;
+  createdAt: Date;
+}
+
 export interface TransactionFormData {
   description: string;
   amount: number;
@@ -34,10 +45,12 @@ export interface TransactionFormData {
   date: Date;
   walletId: string;
   userId: string;
+  categoryId?: string;
   recurrence?: {
     type: 'none' | 'monthly' | 'weekly' | 'yearly' | 'custom';
     repetitions?: number;
     endDate?: Date;
+    isInfinite?: boolean;
   };
 }
 

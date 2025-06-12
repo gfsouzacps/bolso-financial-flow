@@ -5,6 +5,7 @@ const recurrenceSchema = z.object({
   type: z.enum(['none', 'monthly', 'weekly', 'yearly', 'custom']),
   repetitions: z.number().positive().optional(),
   endDate: z.date().optional(),
+  isInfinite: z.boolean().optional(),
 }).optional();
 
 export const transactionSchema = z.object({
@@ -18,6 +19,7 @@ export const transactionSchema = z.object({
   }),
   walletId: z.string().min(1, 'Carteira é obrigatória'),
   userId: z.string().min(1, 'Usuário é obrigatório'),
+  categoryId: z.string().optional(),
   recurrence: recurrenceSchema,
 });
 

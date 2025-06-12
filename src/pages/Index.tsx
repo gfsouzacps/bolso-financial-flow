@@ -8,6 +8,7 @@ import { TransactionList } from '@/components/TransactionList';
 import { FinancialChart } from '@/components/FinancialChart';
 import { InvestmentCard } from '@/components/InvestmentCard';
 import { InsightsCard } from '@/components/InsightsCard';
+import { RecurringExpensesCard } from '@/components/RecurringExpensesCard';
 import { TransactionModal } from '@/components/TransactionModal';
 
 const Index = () => {
@@ -28,6 +29,11 @@ const Index = () => {
             <div className="lg:col-span-1 order-2 lg:order-2">
               <FinancialChart />
             </div>
+          </div>
+          
+          {/* Seção de Gastos Recorrentes */}
+          <div className="mb-6 sm:mb-8">
+            <RecurringExpensesCard />
           </div>
           
           {/* Seção de Investimentos e Insights - empilhados em mobile */}

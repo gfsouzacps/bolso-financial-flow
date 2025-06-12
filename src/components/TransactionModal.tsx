@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Clock } from 'lucide-react';
+import { Plus, Clock, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CalendarIcon, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,7 +26,7 @@ export function TransactionModal() {
   const [lastWalletId, setLastWalletId] = useState<string>('');
   const [lastUserId, setLastUserId] = useState<string>('');
   
-  const { addTransaction, wallets, currentUser } = useTransactions();
+  const { addTransaction, wallets, currentUser, investmentCategories } = useTransactions();
 
   const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
@@ -36,8 +37,10 @@ export function TransactionModal() {
       date: new Date(),
       walletId: lastWalletId || '',
       userId: currentUser?.id || '',
+      categoryId: '',
       recurrence: {
         type: 'none',
+        isInfinite: false,
       },
     },
   });
@@ -60,10 +63,12 @@ export function TransactionModal() {
       date: data.date,
       walletId: data.walletId,
       userId: data.userId,
+      categoryId: data.categoryId,
       recurrence: {
         type: data.recurrence?.type || 'none',
         repetitions: data.recurrence?.repetitions,
         endDate: data.recurrence?.endDate,
+        isInfinite: data.recurrence?.isInfinite || false,
       },
     };
     
@@ -79,8 +84,10 @@ export function TransactionModal() {
       date: new Date(),
       walletId: data.walletId, // Manter última carteira
       userId: data.userId, // Manter último usuário
+      categoryId: '',
       recurrence: {
         type: 'none',
+        isInfinite: false,
       },
     });
     setShowRecurrence(false);
@@ -88,6 +95,9 @@ export function TransactionModal() {
   };
 
   const recurrenceType = form.watch('recurrence.type');
+  const isInfiniteRecurrence = form.watch('recurrence.isInfinite');
+  const selectedWallet = form.watch('walletId');
+  const isInvestmentWallet = wallets.find(w => w.id === selectedWallet)?.name === 'Investimentos';
 
   return (
     <TooltipProvider>
@@ -196,6 +206,37 @@ export function TransactionModal() {
                 )}
               />
 
+              {/* Campo de Categoria de Investimento - só aparece se a carteira de Investimentos estiver selecionada */}
+              {isInvestmentWallet && (
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        Categoria de Investimento
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a categoria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {investmentCategories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
                 name="userId"
@@ -248,66 +289,88 @@ export function TransactionModal() {
                       )}
                     />
 
-                    {recurrenceType === 'custom' && (
-                      <>
-                        <FormField
-                          control={form.control}
-                          name="recurrence.repetitions"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Quantidade de Repetições</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Ex: 12"
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    {recurrenceType !== 'none' && (
+                      <FormField
+                        control={form.control}
+                        name="recurrence.isInfinite"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>
+                                Sem fim (vitalícia)
+                              </FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
-                        <FormField
-                          control={form.control}
-                          name="recurrence.endDate"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel>Data Final (Opcional)</FormLabel>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      className={cn(
-                                        "w-full pl-3 text-left font-normal",
-                                        !field.value && "text-muted-foreground"
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        format(field.value, "dd/MM/yyyy", { locale: ptBR })
-                                      ) : (
-                                        <span>Selecione uma data</span>
-                                      )}
-                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    className="p-3"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </>
+                    {recurrenceType === 'custom' && !isInfiniteRecurrence && (
+                      <FormField
+                        control={form.control}
+                        name="recurrence.repetitions"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantidade de Repetições</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="Ex: 12"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {recurrenceType !== 'none' && !isInfiniteRecurrence && (
+                      <FormField
+                        control={form.control}
+                        name="recurrence.endDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Data Final</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, "dd/MM/yyyy", { locale: ptBR })
+                                    ) : (
+                                      <span>Selecione uma data</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  className="p-3"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     )}
                   </CollapsibleContent>
                 </Collapsible>
