@@ -11,11 +11,19 @@ import { InvestmentCard } from '@/components/InvestmentCard';
 import { InsightsCard } from '@/components/InsightsCard';
 import { RecurringExpensesCard } from '@/components/RecurringExpensesCard';
 import { RecurringExpensesDetails } from '@/components/RecurringExpensesDetails';
-import { TransactionModal } from '@/components/TransactionModal';
+import { SpeedDialFAB } from '@/components/SpeedDialFAB';
+import { ExpenseModal } from '@/components/ExpenseModal';
+import { IncomeModal } from '@/components/IncomeModal';
+import { RecurringModal } from '@/components/RecurringModal';
+import { TransferModal } from '@/components/TransferModal';
 import { ChatModal } from '@/components/ChatModal';
 
 const Index = () => {
   const [showRecurringDetails, setShowRecurringDetails] = useState(false);
+  const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [incomeModalOpen, setIncomeModalOpen] = useState(false);
+  const [recurringModalOpen, setRecurringModalOpen] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
 
   if (showRecurringDetails) {
     return (
@@ -59,7 +67,19 @@ const Index = () => {
             <InsightsCard />
           </div>
           
-          <TransactionModal />
+          {/* Speed Dial FAB */}
+          <SpeedDialFAB
+            onExpenseClick={() => setExpenseModalOpen(true)}
+            onIncomeClick={() => setIncomeModalOpen(true)}
+            onRecurringClick={() => setRecurringModalOpen(true)}
+            onTransferClick={() => setTransferModalOpen(true)}
+          />
+          
+          {/* Modais */}
+          <ExpenseModal open={expenseModalOpen} onOpenChange={setExpenseModalOpen} />
+          <IncomeModal open={incomeModalOpen} onOpenChange={setIncomeModalOpen} />
+          <RecurringModal open={recurringModalOpen} onOpenChange={setRecurringModalOpen} />
+          <TransferModal open={transferModalOpen} onOpenChange={setTransferModalOpen} />
           <ChatModal />
         </div>
       </div>

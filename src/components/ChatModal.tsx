@@ -11,6 +11,7 @@ interface ParsedTransaction {
   description: string;
   categoryId?: string;
   type: 'income' | 'expense';
+  transactionType: 'pontual' | 'recorrente' | 'ambiguo';
 }
 
 export function ChatModal() {
@@ -19,11 +20,12 @@ export function ChatModal() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [parsedTransaction, setParsedTransaction] = useState<ParsedTransaction | null>(null);
   const [selectedWallet, setSelectedWallet] = useState<string>('');
+  const [isAmbiguous, setIsAmbiguous] = useState(false);
   
   const { transactionCategories, wallets, addTransaction, currentUser } = useTransactions();
 
   const parseTransactionMessage = (text: string): ParsedTransaction | null => {
-    // Regex simples para extrair valores monetários
+    // Regex para extrair valores monetários
     const amountMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:reais?|r\$|R\$)?/i);
     
     if (!amountMatch) return null;
@@ -31,30 +33,39 @@ export function ChatModal() {
     const amount = parseFloat(amountMatch[1].replace(',', '.'));
     
     // Identificar se é receita ou despesa
-    const isIncome = /ganhei|recebi|salário|entrada/i.test(text);
+    const isIncome = /ganhei|recebi|salário|entrada|freelance/i.test(text);
     const type = isIncome ? 'income' : 'expense';
     
-    // Extrair descrição (texto após "no" ou "em" ou antes do valor)
+    // Identificar se é recorrente
+    const isRecurring = /mensal|todo mês|mensalmente|recorrente|sempre|vitalício|assinatura/i.test(text);
+    const isOneTime = /hoje|pontual|única|único|agora|uma vez/i.test(text);
+    
+    let transactionType: 'pontual' | 'recorrente' | 'ambiguo' = 'ambiguo';
+    if (isRecurring) transactionType = 'recorrente';
+    else if (isOneTime) transactionType = 'pontual';
+    
+    // Extrair descrição
     let description = '';
-    const afterPrep = text.match(/(?:no|na|em|para|com)\s+([^0-9]+)/i);
+    const afterPrep = text.match(/(?:no|na|em|para|com|da|do)\s+([^0-9]+)/i);
     if (afterPrep) {
       description = afterPrep[1].trim();
     } else {
-      // Pegar a primeira palavra que não seja um número
       const words = text.split(' ').filter(word => !word.match(/\d/) && word.length > 2);
       description = words[0] || 'Transação';
     }
 
-    // Identificar categoria baseada em palavras-chave
+    // Identificar categoria
     let categoryId = '';
     const categoryMap = {
       'restaurante': ['restaurante', 'outback', 'mcdonald', 'burger', 'pizza', 'comida'],
       'supermercado': ['supermercado', 'mercado', 'extra', 'carrefour', 'pão de açúcar'],
       'transporte': ['uber', 'taxi', 'combustível', 'gasolina', 'posto'],
-      'lazer': ['cinema', 'teatro', 'show', 'balada', 'diversão'],
+      'lazer': ['cinema', 'teatro', 'show', 'balada', 'diversão', 'netflix'],
       'saúde': ['farmácia', 'médico', 'hospital', 'remédio'],
       'educação': ['escola', 'curso', 'livro', 'faculdade'],
-      'moradia': ['aluguel', 'condomínio', 'luz', 'água', 'internet']
+      'moradia': ['aluguel', 'condomínio', 'luz', 'água', 'internet'],
+      'salário': ['salário', 'pagamento', 'trabalho'],
+      'outras receitas': ['freelance', 'extra', 'bônus']
     };
 
     const lowerText = text.toLowerCase();
@@ -73,7 +84,8 @@ export function ChatModal() {
       amount,
       description: description.charAt(0).toUpperCase() + description.slice(1),
       categoryId,
-      type
+      type,
+      transactionType
     };
   };
 
@@ -88,6 +100,7 @@ export function ChatModal() {
     const parsed = parseTransactionMessage(message);
     if (parsed) {
       setParsedTransaction(parsed);
+      setIsAmbiguous(parsed.transactionType === 'ambiguo');
     } else {
       alert('Não consegui entender a transação. Tente algo como "gastei 50 reais no supermercado"');
     }
@@ -95,10 +108,20 @@ export function ChatModal() {
     setIsProcessing(false);
   };
 
+  const handleTransactionTypeSelection = (transactionType: 'pontual' | 'recorrente') => {
+    if (parsedTransaction) {
+      setParsedTransaction({
+        ...parsedTransaction,
+        transactionType
+      });
+      setIsAmbiguous(false);
+    }
+  };
+
   const handleConfirmTransaction = () => {
     if (!parsedTransaction || !selectedWallet || !currentUser) return;
 
-    addTransaction({
+    const baseTransaction = {
       description: parsedTransaction.description,
       amount: parsedTransaction.amount,
       type: parsedTransaction.type,
@@ -106,12 +129,25 @@ export function ChatModal() {
       walletId: selectedWallet,
       userId: currentUser.id,
       transactionCategoryId: parsedTransaction.categoryId,
-    });
+    };
+
+    if (parsedTransaction.transactionType === 'recorrente') {
+      addTransaction({
+        ...baseTransaction,
+        recurrence: {
+          type: 'monthly',
+          isInfinite: true
+        }
+      });
+    } else {
+      addTransaction(baseTransaction);
+    }
 
     // Reset
     setMessage('');
     setParsedTransaction(null);
     setSelectedWallet('');
+    setIsAmbiguous(false);
     setOpen(false);
   };
 
@@ -141,7 +177,7 @@ export function ChatModal() {
                 </label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Ex: gastei 300 reais no outback"
+                    placeholder="Ex: paguei 55,90 da netflix"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -163,58 +199,89 @@ export function ChatModal() {
               
               <div className="text-xs text-muted-foreground">
                 <p><strong>Exemplos:</strong></p>
-                <p>• "gastei 50 reais no supermercado"</p>
-                <p>• "paguei 300 no outback"</p>
-                <p>• "recebi 100 reais"</p>
+                <p>• "paguei 55,90 da netflix mensal"</p>
+                <p>• "gastei 50 reais no supermercado hoje"</p>
+                <p>• "recebi 100 reais de freelance"</p>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="p-4 border rounded-lg bg-muted/50">
-                <h3 className="font-medium mb-2">Transação identificada:</h3>
-                <div className="space-y-1 text-sm">
-                  <p><strong>Descrição:</strong> {parsedTransaction.description}</p>
-                  <p><strong>Valor:</strong> R$ {parsedTransaction.amount.toFixed(2)}</p>
-                  <p><strong>Tipo:</strong> {parsedTransaction.type === 'income' ? 'Entrada' : 'Saída'}</p>
-                  <p><strong>Categoria:</strong> {getCategoryName(parsedTransaction.categoryId)}</p>
-                  <p><strong>Data:</strong> Hoje</p>
+              {isAmbiguous ? (
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg bg-yellow-50">
+                    <h3 className="font-medium mb-2">Preciso esclarecer uma coisa:</h3>
+                    <p className="text-sm mb-4">
+                      Identifiquei o pagamento de <strong>R$ {parsedTransaction.amount.toFixed(2)}</strong> para <strong>{parsedTransaction.description}</strong>. 
+                      Este é um gasto recorrente que se repete todo mês ou foi um pagamento único?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => handleTransactionTypeSelection('recorrente')}
+                        variant="outline"
+                        size="sm"
+                      >
+                        É Recorrente
+                      </Button>
+                      <Button 
+                        onClick={() => handleTransactionTypeSelection('pontual')}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Pagamento Único
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg bg-muted/50">
+                    <h3 className="font-medium mb-2">Transação identificada:</h3>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Descrição:</strong> {parsedTransaction.description}</p>
+                      <p><strong>Valor:</strong> R$ {parsedTransaction.amount.toFixed(2)}</p>
+                      <p><strong>Tipo:</strong> {parsedTransaction.type === 'income' ? 'Entrada' : 'Saída'}</p>
+                      <p><strong>Categoria:</strong> {getCategoryName(parsedTransaction.categoryId)}</p>
+                      <p><strong>Natureza:</strong> {parsedTransaction.transactionType === 'recorrente' ? 'Recorrente (mensal)' : 'Pontual'}</p>
+                      <p><strong>Data:</strong> Hoje</p>
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Selecione a carteira:
-                </label>
-                <select 
-                  className="w-full p-2 border rounded-md"
-                  value={selectedWallet}
-                  onChange={(e) => setSelectedWallet(e.target.value)}
-                >
-                  <option value="">Selecione...</option>
-                  {wallets.filter(w => w.name !== 'Investimentos').map(wallet => (
-                    <option key={wallet.id} value={wallet.id}>
-                      {wallet.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Selecione a carteira:
+                    </label>
+                    <select 
+                      className="w-full p-2 border rounded-md"
+                      value={selectedWallet}
+                      onChange={(e) => setSelectedWallet(e.target.value)}
+                    >
+                      <option value="">Selecione...</option>
+                      {wallets.filter(w => w.name !== 'Investimentos').map(wallet => (
+                        <option key={wallet.id} value={wallet.id}>
+                          {wallet.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setParsedTransaction(null)}
-                  className="flex-1"
-                >
-                  Editar
-                </Button>
-                <Button 
-                  onClick={handleConfirmTransaction}
-                  disabled={!selectedWallet}
-                  className="flex-1"
-                >
-                  Confirmar
-                </Button>
-              </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setParsedTransaction(null)}
+                      className="flex-1"
+                    >
+                      Editar
+                    </Button>
+                    <Button 
+                      onClick={handleConfirmTransaction}
+                      disabled={!selectedWallet}
+                      className="flex-1"
+                    >
+                      Confirmar
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
