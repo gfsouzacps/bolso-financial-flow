@@ -1,18 +1,29 @@
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Calculator, TrendingUp } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function Header() {
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-center mb-2">
-        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mr-3">
-          <span className="text-primary-foreground font-bold text-lg">N</span>
+    <header className="flex items-center justify-between mb-6 sm:mb-8">
+      <div className="flex items-center gap-3">
+        <div className="bg-primary rounded-lg p-2">
+          <Calculator className="h-6 w-6 text-primary-foreground" />
         </div>
-        <h1 className="text-3xl font-bold">NoBolso</h1>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">FinanceApp</h1>
+          <p className="text-sm text-muted-foreground hidden sm:block">
+            Controle suas finanças de forma inteligente
+          </p>
+        </div>
       </div>
-      <p className="text-center text-muted-foreground">
-        Controle suas finanças de forma simples e intuitiva
-      </p>
-    </div>
+      
+      <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+          <TrendingUp className="h-4 w-4" />
+          <span>Dashboard Financeiro</span>
+        </div>
+        <ThemeToggle />
+      </div>
+    </header>
   );
 }
