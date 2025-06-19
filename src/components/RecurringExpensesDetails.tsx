@@ -1,10 +1,12 @@
 
-import { ArrowLeft, Trash2, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Trash2, Calendar, Clock, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/TransactionContext';
+import { RecurringExpenseEditModal } from '@/components/RecurringExpenseEditModal';
+import { useState } from 'react';
 
 interface RecurringExpensesDetailsProps {
   onBack: () => void;
@@ -12,6 +14,7 @@ interface RecurringExpensesDetailsProps {
 
 export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsProps) {
   const { getRecurringExpensesDetails, removeRecurringExpense } = useTransactions();
+  const [editingExpense, setEditingExpense] = useState<string | null>(null);
   const recurringExpenses = getRecurringExpensesDetails();
 
   const formatCurrency = (value: number) => {
@@ -79,20 +82,37 @@ export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsPro
                       </span>
                     </div>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleRemoveExpense(expense.id)}
-                    className="ml-4"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingExpense(expense.id)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleRemoveExpense(expense.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+
+      {/* Modal de Edição */}
+      {editingExpense && (
+        <RecurringExpenseEditModal
+          expenseId={editingExpense}
+          open={!!editingExpense}
+          onOpenChange={(open) => !open && setEditingExpense(null)}
+        />
+      )}
     </div>
   );
 }

@@ -165,7 +165,7 @@ export function ChatModal() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Gasto por Chat</DialogTitle>
+          <DialogTitle>Adicionar Movimentação por Chat</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
@@ -173,7 +173,7 @@ export function ChatModal() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Digite seu gasto em linguagem natural:
+                  Digite sua movimentação em linguagem natural:
                 </label>
                 <div className="flex gap-2">
                   <Input
