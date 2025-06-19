@@ -44,25 +44,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Aqui você chamará sua API de autenticação
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
+      // Simular delay de rede
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Credenciais de teste
+      if (email === 'admin@teste.com' && password === '123456') {
+        const mockUser = {
+          id: 'test-user-id',
+          name: 'Administrador',
+          email: 'admin@teste.com',
+          avatar: 'https://via.placeholder.com/40'
+        };
+        
+        localStorage.setItem('authToken', 'mock-auth-token');
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        setUser(mockUser);
+      } else {
         throw new Error('Credenciais inválidas');
       }
-
-      const data = await response.json();
-      
-      // Salvar token e dados do usuário
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
     } catch (error) {
       console.error('Erro no login:', error);
       throw error;
@@ -74,11 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
-      // Aqui você implementará a autenticação com Google
-      // Por exemplo, usando Google OAuth ou similar
-      console.log('Login with Google - implementar integração');
+      // Simular delay de rede
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Simulação para desenvolvimento - remover em produção
       const mockUser = {
         id: 'google-user-id',
         name: 'Usuário Google',
