@@ -10,6 +10,7 @@ interface TransactionContextType {
   filters: TransactionFilters;
   currentUser: User | null;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
+  updateTransaction: (transaction: Transaction) => void;
   addInvestmentCategory: (category: Omit<InvestmentCategory, 'id'>) => void;
   updateInvestmentCategory: (id: string, category: InvestmentCategory) => void;
   updateFilters: (filters: Partial<TransactionFilters>) => void;
@@ -160,6 +161,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: Date.now().toString(),
     };
     setTransactions(prev => [newTransaction, ...prev]);
+  };
+
+  const updateTransaction = (updatedTransaction: Transaction) => {
+    setTransactions(prev => 
+      prev.map(transaction => 
+        transaction.id === updatedTransaction.id ? updatedTransaction : transaction
+      )
+    );
   };
 
   const addInvestmentCategory = (category: Omit<InvestmentCategory, 'id'>) => {
@@ -335,6 +344,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         currentUser,
         filters,
         addTransaction,
+        updateTransaction,
         addInvestmentCategory,
         updateInvestmentCategory,
         removeRecurringExpense,
