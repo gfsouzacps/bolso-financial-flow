@@ -1,10 +1,7 @@
 using MediatR;
+using System;
 
-namespace NoBolso.Application.Features.Auth.Commands;
-
-public class RegistrarUsuarioCommand : IRequest<Guid>
+namespace NoBolso.Application.Features.Auth.Commands
 {
-    public string Nome { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Senha { get; set; } = string.Empty;
+    public record RegistrarUsuarioCommand(string Nome, string Email, string Senha) : IRequest<Guid>;
 }

@@ -1,45 +1,44 @@
 using MediatR;
 using NoBolso.Domain.Entities;
 using NoBolso.Domain.Interfaces;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace NoBolso.Application.Features.Auth.Commands;
-
-public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCommand, Guid>
+namespace NoBolso.Application.Features.Auth.Commands
 {
-    private readonly IUsuarioRepository _usuarioRepository;
-    private readonly IPasswordHasher _passwordHasher;
-
-    public RegistrarUsuarioCommandHandler(IUsuarioRepository usuarioRepository, IPasswordHasher passwordHasher)
+    public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCommand, Guid>
     {
-        _usuarioRepository = usuarioRepository;
-        _passwordHasher = passwordHasher;
-    }
+        private readonly IUsuarioRepository _usuarioRepository;
+        private readonly IPasswordHasher _passwordHasher;
 
-    public async Task<Guid> Handle(RegistrarUsuarioCommand request, CancellationToken cancellationToken)
-    {
-        // TODO: Adicionar validação com FluentValidation
-
-        var existingUser = await _usuarioRepository.GetByEmailAsync(request.Email);
-        if (existingUser != null)
-        { 
-            // Idealmente, isso seria um Result<T> com um erro específico,
-            // mas por enquanto uma exceção é suficiente.
-            throw new Exception("Já existe um usuário com este e-mail.");
+        public RegistrarUsuarioCommandHandler(IUsuarioRepository usuarioRepository, IPasswordHasher passwordHasher)
+        {
+            _usuarioRepository = usuarioRepository;
+            _passwordHasher = passwordHasher;
         }
 
-        // Hashear a senha
-        var passwordHash = _passwordHasher.HashPassword(request.Senha);
-
-        var usuario = new Usuario
+        public async Task<Guid> Handle(RegistrarUsuarioCommand request, CancellationToken cancellationToken)
         {
-            Id = Guid.NewGuid(),
-            Nome = request.Nome,
-            Email = request.Email,
-            PasswordHash = passwordHash
-        };
+            // Verificar se já existe um usuário com o mesmo email
+            var existingUser = await _usuarioRepository.GetByEmailAsync(request.Email);
+            if (existingUser != null)
+            {
+                throw new ApplicationException("Já existe um usuário com este email.");
+            }
 
-        await _usuarioRepository.AddAsync(usuario);
+            var passwordHash = _passwordHasher.HashPassword(request.Senha);
 
-        return usuario.Id;
+            var usuario = new Usuario
+            {
+                Id = Guid.NewGuid(),
+                Nome = request.Nome,
+                Email = request.Email,
+                PasswordHash = passwordHash
+            };
+
+            await _usuarioRepository.AddAsync(usuario);
+
+            return usuario.Id;
+        }
     }
 }

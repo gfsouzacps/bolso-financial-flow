@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, Chrome } from 'lucide-react';
+import { RegistrationModal } from '@/components/RegistrationModal';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -120,6 +121,10 @@ const Login = () => {
             <p>Credenciais de teste:</p>
             <p>E-mail: admin@teste.com</p>
             <p>Senha: 123456</p>
+          </div>
+
+          <div className="text-center">
+            <RegistrationModal />
           </div>
         </CardContent>
       </Card>

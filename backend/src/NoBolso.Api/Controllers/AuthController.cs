@@ -1,6 +1,10 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NoBolso.Application.Features.Auth.Commands;
+using NoBolso.Application.Features.Auth.Queries;
+using System.Security.Claims;
+// using NoBolso.Application.Features.Auth.Queries; // Adicionaremos este
 
 namespace NoBolso.Api.Controllers;
 
@@ -9,25 +13,67 @@ namespace NoBolso.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly ISender _mediator;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(ISender mediator)
+    public AuthController(ISender mediator, IConfiguration configuration)
     {
         _mediator = mediator;
+        _configuration = configuration;
+    }
+    [Authorize]
+    [HttpGet("meu-perfil")]
+    public async Task<IActionResult> GetMeuPerfil()
+    {
+        // Delega toda a lógica para o MediatR
+        var usuarioDto = await _mediator.Send(new GetMeuPerfilQuery());
+        return Ok(usuarioDto);
     }
 
     [HttpPost("registrar")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Registrar([FromBody] RegistrarUsuarioCommand command)
     {
-        try
+        // Com o ValidationBehavior, a validação é automática.
+        // Se a validação falhar, uma ValidationException será lançada e tratada pelo middleware global.
+        var usuarioId = await _mediator.Send(command);
+        return StatusCode(201, new { UsuarioId = usuarioId });
+    }
+
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(NoBolso.Application.Features.Auth.Dtos.UsuarioDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login([FromBody] LoginCommand command)
+    {
+        var loginResult = await _mediator.Send(command);
+
+        var expiryMinutes = _configuration.GetValue<int>("JwtSettings:ExpiryInMinutes", 120); // Default de 2h
+        Response.Cookies.Append("__Host-auth-token", loginResult.AccessToken, new CookieOptions
         {
-            var usuarioId = await _mediator.Send(command);
-            return Ok(new { UsuarioId = usuarioId });
-        }
-        catch (Exception ex)
+            HttpOnly = true,
+            Secure = true, // Lembre-se que em produção o ambiente deve ser HTTPS
+            Expires = DateTimeOffset.UtcNow.AddMinutes(expiryMinutes),
+            SameSite = SameSiteMode.Strict,
+            Path = "/"
+        });
+
+        // Retorna os dados do usuário no corpo da resposta
+        return Ok(loginResult.User);
+    }
+
+    [Authorize] // Protegido!
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("__Host-auth-token", new CookieOptions
         {
-            // Idealmente, terÃ­amos um middleware de tratamento de exceÃ§Ãµes
-            // para capturar diferentes tipos de exceÃ§Ã£o e retornar os status codes corretos.
-            return BadRequest(new { Error = ex.Message });
-        }
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Path = "/"
+        });
+
+        return Ok(new { message = "Logout bem-sucedido." });
     }
 }

@@ -1,125 +1,123 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '@/lib/api';
 
 interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
+    id: string;
+    nome: string;
+    email: string;
+    avatar?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
+    user: User | null;
+    isLoading: boolean;
+    login: (email: string, senha: string) => Promise<void>;
+    register: (nome: string, email: string, senha: string) => Promise<void>;
+    loginWithGoogle: () => Promise<void>;
+    logout: () => void;
+    isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true); // Começa como true para verificar a sessão
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    // Verificar se existe token no localStorage
-    const token = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
-    
-    if (token && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Erro ao recuperar usuário:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
-      }
-    }
-    
-    setIsLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      // Simular delay de rede
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Credenciais de teste
-      if (email === 'admin@teste.com' && password === '123456') {
-        const mockUser = {
-          id: 'test-user-id',
-          name: 'Administrador',
-          email: 'admin@teste.com',
-          avatar: 'https://via.placeholder.com/40'
+    // useEffect para verificar a sessão na inicialização do app
+    useEffect(() => {
+        const verificarSessao = async () => {
+            try {
+                // O cookie é enviado automaticamente pelo navegador
+                const response = await api.get('/api/auth/meu-perfil');
+                setUser(response.data);
+            } catch (error) {
+                // Se a chamada falhar (ex: 401), significa que não há sessão válida.
+                setUser(null);
+            } finally {
+                // Terminamos de verificar, a aplicação pode ser exibida.
+                setIsLoading(false);
+            }
         };
-        
-        localStorage.setItem('authToken', 'mock-auth-token');
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-      } else {
-        throw new Error('Credenciais inválidas');
-      }
-    } catch (error) {
-      console.error('Erro no login:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const loginWithGoogle = async () => {
-    setIsLoading(true);
-    try {
-      // Simular delay de rede
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser = {
-        id: 'google-user-id',
-        name: 'Usuário Google',
-        email: 'user@gmail.com',
-        avatar: 'https://via.placeholder.com/40'
-      };
-      
-      localStorage.setItem('authToken', 'google-mock-token');
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
-    } catch (error) {
-      console.error('Erro no login com Google:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        verificarSessao();
+    }, []); // O array vazio [] garante que isso só rode uma vez
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    setUser(null);
-  };
+    const login = async (email: string, senha: string) => {
+        setIsLoading(true);
+        try {
+            const response = await api.post('/api/auth/login', { email, senha });
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        login,
-        loginWithGoogle,
-        logout,
-        isAuthenticated: !!user,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+            // A resposta da API é o próprio usuário. Colocamos no estado.
+            const userData = response.data;
+            setUser(userData);
+
+            // NADA é salvo no localStorage.
+
+            navigate('/');
+        } catch (error) {
+            console.error('Login failed:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const register = async (nome: string, email: string, senha: string) => {
+        setIsLoading(true);
+        try {
+            await api.post('/api/auth/registrar', { nome, email, senha });
+            await login(email, senha);
+        } catch (error) {
+            console.error("Registration failed:", error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const loginWithGoogle = async () => {
+        // ... (sua lógica de login com Google aqui, que também não deve usar localStorage)
+    };
+
+    const logout = async () => {
+        setIsLoading(true);
+        try {
+            await api.post('/api/auth/logout');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        } finally {
+            // Limpamos apenas o estado em memória.
+            setUser(null);
+            setIsLoading(false);
+            navigate('/login');
+        }
+    };
+
+    return (
+        <AuthContext.Provider
+            value={{
+                user,
+                isLoading,
+                login,
+                register,
+                loginWithGoogle,
+                logout,
+                isAuthenticated: !!user,
+            }}
+        >
+            {/* Não renderiza os filhos enquanto estiver verificando a sessão */}
+            {!isLoading && children}
+        </AuthContext.Provider>
+    );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
-  return context;
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    }
+    return context;
 }

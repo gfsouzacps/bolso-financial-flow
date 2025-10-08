@@ -1,52 +1,47 @@
-using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using NoBolso.Application;
-using NoBolso.Domain.Interfaces;
-using NoBolso.Infrastructure.Auth; // Adicionado
-using NoBolso.Infrastructure.Persistence;
-using NoBolso.Infrastructure.Persistence.Repositories;
+using NoBolso.Infrastructure;
+using NoBolso.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// 1. Configuração do DbContext com PostgreSQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddHttpContextAccessor();
 
-// 2. Injeção de Dependência dos Serviços e Repositórios
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>(); // Adicionado
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<ITransacaoRepository, TransacaoRepository>();
-builder.Services.AddScoped<IInvestimentoRepository, InvestimentoRepository>();
-builder.Services.AddScoped<IDespesaRecorrenteRepository, DespesaRecorrenteRepository>();
-builder.Services.AddScoped<ICategoriaInvestimentoRepository, CategoriaInvestimentoRepository>();
+// Add API Layer services
+builder.Services.AddAuthenticationConfig(builder.Configuration);
+builder.Services.AddSwaggerConfig();
 
-// 3. Configuração do MediatR e FluentValidation
-builder.Services.AddMediatR(cfg => 
-    cfg.RegisterServicesFromAssembly(typeof(AssemblyReference).Assembly));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebApp",
+        policy => policy.WithOrigins("http://localhost:8080")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+});
 
-builder.Services.AddValidatorsFromAssembly(typeof(AssemblyReference).Assembly);
-// TODO: Adicionar pipeline de validação para o MediatR
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 
-builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwaggerConfig();
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowWebApp");
+
+// Adiciona o middleware de autenticação. Deve vir antes da autorização.
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
