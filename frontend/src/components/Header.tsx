@@ -1,14 +1,13 @@
-
-import { ThemeToggle } from './ThemeToggle';
-import { useAuth } from '@/contexts/AuthContext';
+import { AlternadorTema } from './AlternadorTema';
+import { useAutenticacao } from '@/contexts/ContextoAutenticacao';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { usuario, sair } = useAutenticacao();
 
-  const handleLogout = () => {
-    logout();
+  const tratarLogout = () => {
+    sair();
   };
 
   return (
@@ -23,19 +22,19 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-3">
-        {user && (
+        {usuario && (
           <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
             <User className="h-4 w-4" />
-            <span>{user.name}</span>
+            <span>{usuario.nome}</span>
           </div>
         )}
         
-        <ThemeToggle />
+        <AlternadorTema />
         
         <Button
           variant="outline"
           size="sm"
-          onClick={handleLogout}
+          onClick={tratarLogout}
           className="flex items-center gap-2"
         >
           <LogOut className="h-4 w-4" />

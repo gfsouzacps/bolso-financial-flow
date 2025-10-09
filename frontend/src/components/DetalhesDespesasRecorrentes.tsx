@@ -1,39 +1,38 @@
-
 import { ArrowLeft, Trash2, Calendar, Clock, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTransactions } from '@/contexts/TransactionContext';
-import { RecurringExpenseEditModal } from '@/components/RecurringExpenseEditModal';
+import { Card, CardContent } from '@/components/ui/card';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
+import { ModalEditarDespesaRecorrente } from '@/components/ModalEditarDespesaRecorrente';
 import { useState } from 'react';
 
-interface RecurringExpensesDetailsProps {
-  onBack: () => void;
+interface DetalhesDespesasRecorrentesProps {
+  aoVoltar: () => void;
 }
 
-export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsProps) {
-  const { getRecurringExpensesDetails, removeRecurringExpense } = useTransactions();
-  const [editingExpense, setEditingExpense] = useState<string | null>(null);
-  const recurringExpenses = getRecurringExpensesDetails();
+export function DetalhesDespesasRecorrentes({ aoVoltar }: DetalhesDespesasRecorrentesProps) {
+  const { obterDetalhesDespesasRecorrentes, removerDespesaRecorrente } = useTransacoes();
+  const [despesaEmEdicao, setDespesaEmEdicao] = useState<string | null>(null);
+  const despesasRecorrentes = obterDetalhesDespesasRecorrentes();
 
-  const formatCurrency = (value: number) => {
-    if (value === Infinity) return 'Infinito';
+  const formatarMoeda = (valor: number) => {
+    if (valor === Infinity) return 'Infinito';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(valor);
   };
 
-  const formatEndDate = (endDate?: Date, isInfinite?: boolean) => {
-    if (isInfinite) return 'Vitalício';
-    if (!endDate) return 'Não definido';
-    return format(endDate, 'MM/yyyy', { locale: ptBR });
+  const formatarDataFim = (dataFim?: Date, eInfinito?: boolean) => {
+    if (eInfinito) return 'Vitalício';
+    if (!dataFim) return 'Não definido';
+    return format(dataFim, 'MM/yyyy', { locale: ptBR });
   };
 
-  const handleRemoveExpense = (expenseId: string) => {
+  const tratarRemocaoDespesa = (despesaId: string) => {
     if (confirm('Tem certeza que deseja remover esta despesa recorrente?')) {
-      removeRecurringExpense(expenseId);
+      removerDespesaRecorrente(despesaId);
     }
   };
 
@@ -41,7 +40,7 @@ export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsPro
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={onBack}>
+        <Button variant="ghost" size="sm" onClick={aoVoltar}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold">Gastos a Prazo</h1>
@@ -49,7 +48,7 @@ export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsPro
 
       {/* Lista de gastos recorrentes */}
       <div className="space-y-4">
-        {recurringExpenses.length === 0 ? (
+        {despesasRecorrentes.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center text-muted-foreground">
@@ -60,25 +59,25 @@ export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsPro
             </CardContent>
           </Card>
         ) : (
-          recurringExpenses.map((expense) => (
-            <Card key={expense.id} className="hover:shadow-md transition-shadow">
+          despesasRecorrentes.map((despesa) => (
+            <Card key={despesa.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{expense.description}</h3>
+                    <h3 className="font-semibold text-lg">{despesa.descricao}</h3>
                     <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        <span>Mensal: {formatCurrency(expense.monthlyAmount)}</span>
+                        <span>Mensal: {formatarMoeda(despesa.valorMensal)}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        <span>Até: {formatEndDate(expense.endDate, expense.isInfinite)}</span>
+                        <span>Até: {formatarDataFim(despesa.dataFim, despesa.eInfinito)}</span>
                       </div>
                     </div>
                     <div className="mt-2">
                       <span className="text-sm font-medium text-warning">
-                        Total restante: {formatCurrency(expense.totalRemaining)}
+                        Total restante: {formatarMoeda(despesa.totalRestante)}
                       </span>
                     </div>
                   </div>
@@ -86,14 +85,14 @@ export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsPro
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingExpense(expense.id)}
+                      onClick={() => setDespesaEmEdicao(despesa.id)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleRemoveExpense(expense.id)}
+                      onClick={() => tratarRemocaoDespesa(despesa.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -106,11 +105,11 @@ export function RecurringExpensesDetails({ onBack }: RecurringExpensesDetailsPro
       </div>
 
       {/* Modal de Edição */}
-      {editingExpense && (
-        <RecurringExpenseEditModal
-          expenseId={editingExpense}
-          open={!!editingExpense}
-          onOpenChange={(open) => !open && setEditingExpense(null)}
+      {despesaEmEdicao && (
+        <ModalEditarDespesaRecorrente
+          despesaId={despesaEmEdicao}
+          aberto={!!despesaEmEdicao}
+          onAbertoChange={(aberto) => !aberto && setDespesaEmEdicao(null)}
         />
       )}
     </div>

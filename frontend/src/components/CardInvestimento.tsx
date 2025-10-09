@@ -1,34 +1,33 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, Target, Calendar, Plus } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { useTransactions } from '@/contexts/TransactionContext';
-import { InvestmentCategoryModal } from '@/components/InvestmentCategoryModal';
-import { InvestmentDetailModal } from '@/components/InvestmentDetailModal';
-import { InvestmentCategory } from '@/types/transaction';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
+import { ModalCategoriaInvestimento } from '@/components/ModalCategoriaInvestimento';
+import { ModalDetalheInvestimento } from '@/components/ModalDetalheInvestimento';
+import { CategoriaInvestimento } from '@/types/transacao';
 
-export function InvestmentCard() {
-  const { investmentCategories } = useTransactions();
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<InvestmentCategory | null>(null);
+export function CardInvestimento() {
+  const { categoriasInvestimento } = useTransacoes();
+  const [mostrarModalCriar, setMostrarModalCriar] = useState(false);
+  const [mostrarModalDetalhe, setMostrarModalDetalhe] = useState(false);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<CategoriaInvestimento | null>(null);
 
-  const formatCurrency = (value: number) => {
+  const formatarMoeda = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(valor);
   };
 
-  const calculateProgress = (current: number, goal: number) => {
-    return Math.min((current / goal) * 100, 100);
+  const calcularProgresso = (atual: number, objetivo: number) => {
+    return Math.min((atual / objetivo) * 100, 100);
   };
 
-  const handleCategoryClick = (category: InvestmentCategory) => {
-    setSelectedCategory(category);
-    setShowDetailModal(true);
+  const tratarCliqueCategoria = (categoria: CategoriaInvestimento) => {
+    setCategoriaSelecionada(categoria);
+    setMostrarModalDetalhe(true);
   };
 
   return (
@@ -43,7 +42,7 @@ export function InvestmentCard() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => setMostrarModalCriar(true)}
               className="h-8 w-8 p-0"
             >
               <Plus className="h-4 w-4" />
@@ -51,17 +50,17 @@ export function InvestmentCard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {investmentCategories.map((investment) => (
+          {categoriasInvestimento.map((investimento) => (
             <div 
-              key={investment.id} 
+              key={investimento.id} 
               className="p-3 sm:p-4 border rounded-lg space-y-3 cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => handleCategoryClick(investment)}
+              onClick={() => tratarCliqueCategoria(investimento)}
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <h3 className="font-medium text-sm sm:text-base">{investment.name}</h3>
+                <h3 className="font-medium text-sm sm:text-base">{investimento.nome}</h3>
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                   <Calendar className="h-3 w-3" />
-                  {investment.createdAt.toLocaleDateString('pt-BR')}
+                  {investimento.criadoEm.toLocaleDateString('pt-BR')}
                 </div>
               </div>
               
@@ -70,28 +69,28 @@ export function InvestmentCard() {
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-primary" />
                     <span className="text-xs sm:text-sm text-muted-foreground">Meta:</span>
-                    <span className="text-xs sm:text-sm font-medium">{formatCurrency(investment.goal)}</span>
+                    <span className="text-xs sm:text-sm font-medium">{formatarMoeda(investimento.objetivo)}</span>
                   </div>
                   <span className="text-sm sm:text-base font-semibold text-primary">
-                    {formatCurrency(investment.current)}
+                    {formatarMoeda(investimento.atual)}
                   </span>
                 </div>
                 
                 <Progress 
-                  value={calculateProgress(investment.current, investment.goal)} 
+                  value={calcularProgresso(investimento.atual, investimento.objetivo)} 
                   className="h-2"
                 />
                 
                 <div className="text-right">
                   <span className="text-xs text-muted-foreground">
-                    {calculateProgress(investment.current, investment.goal).toFixed(1)}% da meta
+                    {calcularProgresso(investimento.atual, investimento.objetivo).toFixed(1)}% da meta
                   </span>
                 </div>
               </div>
             </div>
           ))}
           
-          {investmentCategories.length === 0 && (
+          {categoriasInvestimento.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Nenhuma categoria de investimento</p>
@@ -101,15 +100,15 @@ export function InvestmentCard() {
         </CardContent>
       </Card>
 
-      <InvestmentCategoryModal 
-        open={showCreateModal} 
-        onOpenChange={setShowCreateModal} 
+      <ModalCategoriaInvestimento 
+        aberto={mostrarModalCriar} 
+        onAbertoChange={setMostrarModalCriar} 
       />
       
-      <InvestmentDetailModal
-        open={showDetailModal}
-        onOpenChange={setShowDetailModal}
-        category={selectedCategory}
+      <ModalDetalheInvestimento
+        aberto={mostrarModalDetalhe}
+        onAbertoChange={setMostrarModalDetalhe}
+        categoria={categoriaSelecionada}
       />
     </>
   );

@@ -1,53 +1,50 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 
-interface InvestmentCategoryModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ModalCategoriaInvestimentoProps {
+  aberto: boolean;
+  onAbertoChange: (aberto: boolean) => void;
 }
 
-export function InvestmentCategoryModal({ open, onOpenChange }: InvestmentCategoryModalProps) {
-  const [name, setName] = useState('');
-  const [goal, setGoal] = useState('');
-  const { addInvestmentCategory } = useTransactions();
+export function ModalCategoriaInvestimento({ aberto, onAbertoChange }: ModalCategoriaInvestimentoProps) {
+  const [nome, setNome] = useState('');
+  const [objetivo, setObjetivo] = useState('');
+  const { adicionarCategoriaInvestimento } = useTransacoes();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const tratarSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name.trim() || !goal) return;
+    if (!nome.trim() || !objetivo) return;
 
-    addInvestmentCategory({
-      name: name.trim(),
-      goal: parseFloat(goal),
-      current: 0,
-      color: 'bg-blue-500',
-      createdAt: new Date()
+    adicionarCategoriaInvestimento({
+      nome: nome.trim(),
+      objetivo: parseFloat(objetivo),
+      cor: 'bg-blue-500', // TODO: Permitir que o usuário escolha a cor
     });
 
-    setName('');
-    setGoal('');
-    onOpenChange(false);
+    setNome('');
+    setObjetivo('');
+    onAbertoChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={aberto} onOpenChange={onAbertoChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Nova Categoria de Investimento</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={tratarSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Categoria</Label>
             <Input
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Viagem, Carro Novo..."
               required
             />
@@ -58,8 +55,8 @@ export function InvestmentCategoryModal({ open, onOpenChange }: InvestmentCatego
             <Input
               id="goal"
               type="number"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
+              value={objetivo}
+              onChange={(e) => setObjetivo(e.target.value)}
               placeholder="Ex: 10000"
               min="0"
               step="0.01"
@@ -68,7 +65,7 @@ export function InvestmentCategoryModal({ open, onOpenChange }: InvestmentCatego
           </div>
           
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+            <Button type="button" variant="outline" onClick={() => onAbertoChange(false)} className="flex-1">
               Cancelar
             </Button>
             <Button type="submit" className="flex-1">

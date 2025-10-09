@@ -1,42 +1,41 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAutenticacao } from '@/contexts/ContextoAutenticacao';
 import { Mail, Lock, Chrome } from 'lucide-react';
-import { RegistrationModal } from '@/components/RegistrationModal';
+import { ModalRegistro } from '@/components/ModalRegistro';
 
-const Login = () => {
+const PaginaLogin = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
+  const { login, loginComGoogle, estaCarregando } = useAutenticacao();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const tratarSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErro('');
 
-    if (!email || !password) {
-      setError('Por favor, preencha todos os campos');
+    if (!email || !senha) {
+      setErro('Por favor, preencha todos os campos');
       return;
     }
 
     try {
-      await login(email, password);
+      await login(email, senha);
     } catch (error) {
-      setError('Credenciais inválidas. Tente novamente.');
+      setErro('Credenciais inválidas. Tente novamente.');
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setError('');
+  const tratarLoginComGoogle = async () => {
+    setErro('');
     try {
-      await loginWithGoogle();
+      await loginComGoogle();
     } catch (error) {
-      setError('Erro ao fazer login com Google. Tente novamente.');
+      setErro('Erro ao fazer login com Google. Tente novamente.');
     }
   };
 
@@ -50,13 +49,13 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
+          {erro && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{erro}</AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={tratarSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <div className="relative">
@@ -68,7 +67,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
-                  disabled={isLoading}
+                  disabled={estaCarregando}
                 />
               </div>
             </div>
@@ -81,20 +80,20 @@ const Login = () => {
                   id="password"
                   type="password"
                   placeholder="Sua senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
                   className="pl-10"
-                  disabled={isLoading}
+                  disabled={estaCarregando}
                 />
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={estaCarregando}
             >
-              {isLoading ? 'Entrando...' : 'Entrar'}
+              {estaCarregando ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
 
@@ -109,9 +108,9 @@ const Login = () => {
 
           <Button
             variant="outline"
-            onClick={handleGoogleLogin}
+            onClick={tratarLoginComGoogle}
             className="w-full"
-            disabled={isLoading}
+            disabled={estaCarregando}
           >
             <Chrome className="mr-2 h-4 w-4" />
             Entrar com Google
@@ -124,7 +123,7 @@ const Login = () => {
           </div>
 
           <div className="text-center">
-            <RegistrationModal />
+            <ModalRegistro />
           </div>
         </CardContent>
       </Card>
@@ -132,4 +131,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default PaginaLogin;

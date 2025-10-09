@@ -1,47 +1,46 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 
-export function FinancialChart() {
-  const { getIncomeTotal, getExpenseTotal } = useTransactions();
+export function GraficoFinanceiro() {
+  const { obterTotalReceitas, obterTotalDespesas } = useTransacoes();
 
-  const income = getIncomeTotal();
-  const expense = getExpenseTotal();
+  const receitas = obterTotalReceitas();
+  const despesas = obterTotalDespesas();
 
-  const data = [
+  const dados = [
     {
       name: 'Entradas',
-      value: income,
+      value: receitas,
       color: 'hsl(var(--income))',
     },
     {
       name: 'Saídas',
-      value: expense,
+      value: despesas,
       color: 'hsl(var(--expense))',
     },
   ];
 
-  const formatCurrency = (value: number) => {
+  const formatarMoeda = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const TooltipPersonalizado = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border rounded-lg p-2 shadow-lg">
           <p className="font-medium">{payload[0].name}</p>
-          <p className="text-sm">{formatCurrency(payload[0].value)}</p>
+          <p className="text-sm">{formatarMoeda(payload[0].value)}</p>
         </div>
       );
     }
     return null;
   };
 
-  if (income === 0 && expense === 0) {
+  if (receitas === 0 && despesas === 0) {
     return (
       <Card className="h-full">
         <CardHeader>
@@ -66,7 +65,7 @@ export function FinancialChart() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={data}
+                data={dados}
                 cx="50%"
                 cy="50%"
                 innerRadius={30}
@@ -74,11 +73,11 @@ export function FinancialChart() {
                 paddingAngle={5}
                 dataKey="value"
               >
-                {data.map((entry, index) => (
+                {dados.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<TooltipPersonalizado />} />
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
@@ -92,11 +91,11 @@ export function FinancialChart() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Total Entradas</p>
-            <p className="text-base sm:text-lg font-semibold text-income">{formatCurrency(income)}</p>
+            <p className="text-base sm:text-lg font-semibold text-income">{formatarMoeda(receitas)}</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Total Saídas</p>
-            <p className="text-base sm:text-lg font-semibold text-expense">{formatCurrency(expense)}</p>
+            <p className="text-base sm:text-lg font-semibold text-expense">{formatarMoeda(despesas)}</p>
           </div>
         </div>
       </CardContent>

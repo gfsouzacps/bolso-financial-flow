@@ -1,25 +1,24 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, TrendingDown, TrendingUp, ChevronRight } from 'lucide-react';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 
-interface RecurringExpensesCardProps {
+interface CardDespesasRecorrentesProps {
   onClick?: () => void;
 }
 
-export function RecurringExpensesCard({ onClick }: RecurringExpensesCardProps) {
-  const { getRecurringExpenses, getMonthlyIncome } = useTransactions();
+export function CardDespesasRecorrentes({ onClick }: CardDespesasRecorrentesProps) {
+  const { obterDespesasRecorrentes, obterReceitaMensal } = useTransacoes();
   
-  const { monthlyTotal, totalRemaining } = getRecurringExpenses();
-  const monthlyIncome = getMonthlyIncome();
-  const expenseRatio = monthlyIncome > 0 ? (monthlyTotal / monthlyIncome) * 100 : 0;
+  const { totalMensal, totalRestante } = obterDespesasRecorrentes();
+  const receitaMensal = obterReceitaMensal();
+  const proporcaoDespesa = receitaMensal > 0 ? (totalMensal / receitaMensal) * 100 : 0;
 
-  const formatCurrency = (value: number) => {
-    if (value === Infinity) return 'Infinito';
+  const formatarMoeda = (valor: number) => {
+    if (valor === Infinity) return 'Infinito';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(valor);
   };
 
   return (
@@ -45,7 +44,7 @@ export function RecurringExpensesCard({ onClick }: RecurringExpensesCardProps) {
               <span className="text-sm text-muted-foreground">Custo Mensal</span>
             </div>
             <p className="text-lg sm:text-xl font-bold text-expense">
-              {formatCurrency(monthlyTotal)}
+              {formatarMoeda(totalMensal)}
             </p>
           </div>
 
@@ -56,13 +55,13 @@ export function RecurringExpensesCard({ onClick }: RecurringExpensesCardProps) {
               <span className="text-sm text-muted-foreground">Total Restante</span>
             </div>
             <p className="text-lg sm:text-xl font-bold text-warning">
-              {formatCurrency(totalRemaining)}
+              {formatarMoeda(totalRestante)}
             </p>
           </div>
         </div>
 
         {/* Comparação com Renda */}
-        {monthlyIncome > 0 && (
+        {receitaMensal > 0 && (
           <div className="p-3 sm:p-4 border rounded-lg bg-muted/50">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -70,7 +69,7 @@ export function RecurringExpensesCard({ onClick }: RecurringExpensesCardProps) {
                 <span className="text-sm text-muted-foreground">Renda Mensal</span>
               </div>
               <span className="text-sm font-medium text-income">
-                {formatCurrency(monthlyIncome)}
+                {formatarMoeda(receitaMensal)}
               </span>
             </div>
             
@@ -78,33 +77,33 @@ export function RecurringExpensesCard({ onClick }: RecurringExpensesCardProps) {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Comprometimento</span>
                 <span className={`text-sm font-medium ${
-                  expenseRatio > 70 ? 'text-destructive' : 
-                  expenseRatio > 50 ? 'text-warning' : 'text-income'
+                  proporcaoDespesa > 70 ? 'text-destructive' : 
+                  proporcaoDespesa > 50 ? 'text-warning' : 'text-income'
                 }`}>
-                  {expenseRatio.toFixed(1)}%
+                  {proporcaoDespesa.toFixed(1)}%
                 </span>
               </div>
               
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
                   className={`h-2 rounded-full transition-all ${
-                    expenseRatio > 70 ? 'bg-destructive' : 
-                    expenseRatio > 50 ? 'bg-warning' : 'bg-income'
+                    proporcaoDespesa > 70 ? 'bg-destructive' : 
+                    proporcaoDespesa > 50 ? 'bg-warning' : 'bg-income'
                   }`}
-                  style={{ width: `${Math.min(expenseRatio, 100)}%` }}
+                  style={{ width: `${Math.min(proporcaoDespesa, 100)}%` }}
                 />
               </div>
               
               <p className="text-xs text-muted-foreground">
-                {expenseRatio > 70 ? 'Atenção: Alto comprometimento da renda' :
-                 expenseRatio > 50 ? 'Moderado comprometimento da renda' :
+                {proporcaoDespesa > 70 ? 'Atenção: Alto comprometimento da renda' :
+                 proporcaoDespesa > 50 ? 'Moderado comprometimento da renda' :
                  'Comprometimento saudável da renda'}
               </p>
             </div>
           </div>
         )}
 
-        {monthlyTotal === 0 && (
+        {totalMensal === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p className="text-sm">Nenhum gasto recorrente encontrado</p>

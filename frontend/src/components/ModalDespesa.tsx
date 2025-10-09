@@ -1,5 +1,3 @@
-
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,83 +12,85 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 
-const transferSchema = z.object({
-  amount: z.number().positive('Valor deve ser positivo'),
-  fromWalletId: z.string().min(1, 'Carteira de origem é obrigatória'),
-  toWalletId: z.string().min(1, 'Carteira de destino é obrigatória'),
-  date: z.date(),
-}).refine((data) => data.fromWalletId !== data.toWalletId, {
-  message: "Carteira de origem deve ser diferente da de destino",
-  path: ["toWalletId"],
+const esquemaDespesa = z.object({
+  descricao: z.string().min(1, 'Descrição é obrigatória'),
+  valor: z.number().positive('Valor deve ser positivo'),
+  categoriaTransacaoId: z.string().min(1, 'Categoria é obrigatória'),
+  carteiraId: z.string().min(1, 'Carteira é obrigatória'),
+  data: z.date(),
 });
 
-type TransferFormData = z.infer<typeof transferSchema>;
+type DadosFormularioDespesa = z.infer<typeof esquemaDespesa>;
 
-interface TransferModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ModalDespesaProps {
+  aberto: boolean;
+  onAbertoChange: (aberto: boolean) => void;
 }
 
-export function TransferModal({ open, onOpenChange }: TransferModalProps) {
-  const { addTransaction, wallets, currentUser } = useTransactions();
+export function ModalDespesa({ aberto, onAbertoChange }: ModalDespesaProps) {
+  const { adicionarTransacao, categoriasTransacao, carteiras, usuarioAtual } = useTransacoes();
 
-  const form = useForm<TransferFormData>({
-    resolver: zodResolver(transferSchema),
+  const form = useForm<DadosFormularioDespesa>({
+    resolver: zodResolver(esquemaDespesa),
     defaultValues: {
-      amount: 0,
-      fromWalletId: '',
-      toWalletId: '',
-      date: new Date(),
+      descricao: '',
+      valor: 0,
+      categoriaTransacaoId: '',
+      carteiraId: '',
+      data: new Date(),
     },
   });
 
-  const fromWalletId = form.watch('fromWalletId');
+  const categoriasDeDespesa = categoriasTransacao.filter(cat => 
+    cat.tipo === 'despesa' || cat.tipo === 'ambos'
+  );
 
-  const onSubmit = (data: TransferFormData) => {
-    if (!currentUser) return;
+  const carteirasDisponiveis = carteiras.filter(c => c.nome !== 'Investimentos');
 
-    const fromWallet = wallets.find(w => w.id === data.fromWalletId);
-    const toWallet = wallets.find(w => w.id === data.toWalletId);
+  const onSubmit = (dados: DadosFormularioDespesa) => {
+    if (!usuarioAtual) return;
 
-    if (!fromWallet || !toWallet) return;
-
-    // Criar transação de saída
-    addTransaction({
-      description: `Transferência para ${toWallet.name}`,
-      amount: data.amount,
-      type: 'expense',
-      date: data.date,
-      walletId: data.fromWalletId,
-      userId: currentUser.id,
-    });
-
-    // Criar transação de entrada
-    addTransaction({
-      description: `Transferência de ${fromWallet.name}`,
-      amount: data.amount,
-      type: 'income',
-      date: data.date,
-      walletId: data.toWalletId,
-      userId: currentUser.id,
+    adicionarTransacao({
+      descricao: dados.descricao,
+      valor: dados.valor,
+      tipo: 'despesa',
+      data: dados.data,
+      carteiraId: dados.carteiraId,
+      usuarioId: usuarioAtual.id,
+      categoriaTransacaoId: dados.categoriaTransacaoId,
     });
 
     form.reset();
-    onOpenChange(false);
+    onAbertoChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={aberto} onOpenChange={onAbertoChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Transferir entre Contas</DialogTitle>
+          <DialogTitle>Adicionar Gasto Pontual</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="amount"
+              name="descricao"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Almoço no restaurante" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="valor"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Valor</FormLabel>
@@ -110,20 +110,20 @@ export function TransferModal({ open, onOpenChange }: TransferModalProps) {
 
             <FormField
               control={form.control}
-              name="fromWalletId"
+              name="categoriaTransacaoId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Carteira de Origem</FormLabel>
+                  <FormLabel>Categoria</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione a origem" />
+                        <SelectValue placeholder="Selecione a categoria" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {wallets.map((wallet) => (
-                        <SelectItem key={wallet.id} value={wallet.id}>
-                          {wallet.name}
+                      {categoriasDeDespesa.map((categoria) => (
+                        <SelectItem key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -135,24 +135,22 @@ export function TransferModal({ open, onOpenChange }: TransferModalProps) {
 
             <FormField
               control={form.control}
-              name="toWalletId"
+              name="carteiraId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Carteira de Destino</FormLabel>
+                  <FormLabel>Carteira</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o destino" />
+                        <SelectValue placeholder="Selecione a carteira" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {wallets
-                        .filter(wallet => wallet.id !== fromWalletId)
-                        .map((wallet) => (
-                          <SelectItem key={wallet.id} value={wallet.id}>
-                            {wallet.name}
-                          </SelectItem>
-                        ))}
+                      {carteirasDisponiveis.map((carteira) => (
+                        <SelectItem key={carteira.id} value={carteira.id}>
+                          {carteira.nome}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -162,7 +160,7 @@ export function TransferModal({ open, onOpenChange }: TransferModalProps) {
 
             <FormField
               control={form.control}
-              name="date"
+              name="data"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Data</FormLabel>
@@ -200,11 +198,11 @@ export function TransferModal({ open, onOpenChange }: TransferModalProps) {
             />
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+              <Button type="button" variant="outline" onClick={() => onAbertoChange(false)} className="flex-1">
                 Cancelar
               </Button>
               <Button type="submit" className="flex-1">
-                Transferir
+                Salvar Gasto
               </Button>
             </div>
           </form>

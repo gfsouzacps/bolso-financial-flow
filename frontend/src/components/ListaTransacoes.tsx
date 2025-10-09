@@ -1,32 +1,31 @@
-
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 import { cn } from '@/lib/utils';
 
-export function TransactionList() {
-  const { getFilteredTransactions, wallets, users } = useTransactions();
-  const transactions = getFilteredTransactions();
+export function ListaTransacoes() {
+  const { obterTransacoesFiltradas, carteiras, usuarios } = useTransacoes();
+  const transacoes = obterTransacoesFiltradas();
 
-  const formatCurrency = (value: number) => {
+  const formatarMoeda = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(valor);
   };
 
-  const getWalletName = (walletId: string) => {
-    return wallets.find(w => w.id === walletId)?.name || 'Carteira';
+  const obterNomeCarteira = (carteiraId: string) => {
+    return carteiras.find(c => c.id === carteiraId)?.nome || 'Carteira';
   };
 
-  const getUser = (userId: string) => {
-    return users.find(u => u.id === userId);
+  const obterUsuario = (usuarioId: string) => {
+    return usuarios.find(u => u.id === usuarioId);
   };
 
-  if (transactions.length === 0) {
+  if (transacoes.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -46,41 +45,41 @@ export function TransactionList() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y">
-          {transactions.map((transaction) => {
-            const user = getUser(transaction.userId);
+          {transacoes.map((transacao) => {
+            const usuario = obterUsuario(transacao.usuarioId);
             return (
-              <div key={transaction.id} className="p-4 flex items-center justify-between">
+              <div key={transacao.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "p-2 rounded-full",
-                    transaction.type === 'income' ? 'bg-income/10' : 'bg-expense/10'
+                    transacao.tipo === 'receita' ? 'bg-income/10' : 'bg-expense/10'
                   )}>
-                    {transaction.type === 'income' ? (
+                    {transacao.tipo === 'receita' ? (
                       <ArrowUp className="h-4 w-4 text-income" />
                     ) : (
                       <ArrowDown className="h-4 w-4 text-expense" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium">{transaction.description}</p>
+                    <p className="font-medium">{transacao.descricao}</p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        {user && (
+                        {usuario && (
                           <>
                             <Avatar className="h-4 w-4">
-                              <AvatarFallback className={cn("text-white text-xs", user.color)}>
-                                {user.name.charAt(0)}
+                              <AvatarFallback className={cn("text-white text-xs", usuario.cor)}>
+                                {usuario.nome.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
-                            <span>{user.name}</span>
+                            <span>{usuario.nome}</span>
                           </>
                         )}
                       </div>
                       <span>•</span>
-                      <span>{getWalletName(transaction.walletId)}</span>
+                      <span>{obterNomeCarteira(transacao.carteiraId)}</span>
                       <span>•</span>
                       <span>
-                        {format(transaction.date, "dd MMM yyyy", { locale: ptBR })}
+                        {format(transacao.data, "dd MMM yyyy", { locale: ptBR })}
                       </span>
                     </div>
                   </div>
@@ -88,9 +87,9 @@ export function TransactionList() {
                 <div className="text-right">
                   <p className={cn(
                     "font-semibold",
-                    transaction.type === 'income' ? 'text-income' : 'text-expense'
+                    transacao.tipo === 'receita' ? 'text-income' : 'text-expense'
                   )}>
-                    {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    {transacao.tipo === 'receita' ? '+' : '-'}{formatarMoeda(transacao.valor)}
                   </p>
                 </div>
               </div>

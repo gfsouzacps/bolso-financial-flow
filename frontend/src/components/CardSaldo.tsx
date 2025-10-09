@@ -1,20 +1,19 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 
-export function BalanceCard() {
-  const { getTotalBalance, getIncomeTotal, getExpenseTotal } = useTransactions();
+export function CardSaldo() {
+  const { obterSaldoTotal, obterTotalReceitas, obterTotalDespesas } = useTransacoes();
 
-  const balance = getTotalBalance();
-  const income = getIncomeTotal();
-  const expense = getExpenseTotal();
+  const saldo = obterSaldoTotal();
+  const receitas = obterTotalReceitas();
+  const despesas = obterTotalDespesas();
 
-  const formatCurrency = (value: number) => {
+  const formatarMoeda = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
-    }).format(value);
+    }).format(valor);
   };
 
   return (
@@ -28,7 +27,7 @@ export function BalanceCard() {
         </CardHeader>
         <CardContent>
           <div className="text-xl sm:text-2xl font-bold">
-            {formatCurrency(balance)}
+            {formatarMoeda(saldo)}
           </div>
         </CardContent>
       </Card>
@@ -43,7 +42,7 @@ export function BalanceCard() {
         </CardHeader>
         <CardContent>
           <div className="text-lg sm:text-xl font-bold text-income">
-            {formatCurrency(income)}
+            {formatarMoeda(receitas)}
           </div>
         </CardContent>
       </Card>
@@ -58,7 +57,7 @@ export function BalanceCard() {
         </CardHeader>
         <CardContent>
           <div className="text-lg sm:text-xl font-bold text-expense">
-            {formatCurrency(expense)}
+            {formatarMoeda(despesas)}
           </div>
         </CardContent>
       </Card>

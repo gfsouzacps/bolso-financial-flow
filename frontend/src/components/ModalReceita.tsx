@@ -1,5 +1,3 @@
-
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,62 +12,62 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 
-const incomeSchema = z.object({
-  description: z.string().min(1, 'Descrição é obrigatória'),
-  amount: z.number().positive('Valor deve ser positivo'),
-  transactionCategoryId: z.string().min(1, 'Categoria é obrigatória'),
-  walletId: z.string().min(1, 'Carteira é obrigatória'),
-  date: z.date(),
+const esquemaReceita = z.object({
+  descricao: z.string().min(1, 'Descrição é obrigatória'),
+  valor: z.number().positive('Valor deve ser positivo'),
+  categoriaTransacaoId: z.string().min(1, 'Categoria é obrigatória'),
+  carteiraId: z.string().min(1, 'Carteira é obrigatória'),
+  data: z.date(),
 });
 
-type IncomeFormData = z.infer<typeof incomeSchema>;
+type DadosFormularioReceita = z.infer<typeof esquemaReceita>;
 
-interface IncomeModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ModalReceitaProps {
+  aberto: boolean;
+  onAbertoChange: (aberto: boolean) => void;
 }
 
-export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
-  const { addTransaction, transactionCategories, wallets, currentUser } = useTransactions();
+export function ModalReceita({ aberto, onAbertoChange }: ModalReceitaProps) {
+  const { adicionarTransacao, categoriasTransacao, carteiras, usuarioAtual } = useTransacoes();
 
-  const form = useForm<IncomeFormData>({
-    resolver: zodResolver(incomeSchema),
+  const form = useForm<DadosFormularioReceita>({
+    resolver: zodResolver(esquemaReceita),
     defaultValues: {
-      description: '',
-      amount: 0,
-      transactionCategoryId: '',
-      walletId: '',
-      date: new Date(),
+      descricao: '',
+      valor: 0,
+      categoriaTransacaoId: '',
+      carteiraId: '',
+      data: new Date(),
     },
   });
 
-  const incomeCategories = transactionCategories.filter(cat => 
-    cat.type === 'income' || cat.type === 'both'
+  const categoriasDeReceita = categoriasTransacao.filter(cat => 
+    cat.tipo === 'receita' || cat.tipo === 'ambos'
   );
 
-  const availableWallets = wallets.filter(w => w.name !== 'Investimentos');
+  const carteirasDisponiveis = carteiras.filter(c => c.nome !== 'Investimentos');
 
-  const onSubmit = (data: IncomeFormData) => {
-    if (!currentUser) return;
+  const onSubmit = (dados: DadosFormularioReceita) => {
+    if (!usuarioAtual) return;
 
-    addTransaction({
-      description: data.description,
-      amount: data.amount,
-      type: 'income',
-      date: data.date,
-      walletId: data.walletId,
-      userId: currentUser.id,
-      transactionCategoryId: data.transactionCategoryId,
+    adicionarTransacao({
+      descricao: dados.descricao,
+      valor: dados.valor,
+      tipo: 'receita',
+      data: dados.data,
+      carteiraId: dados.carteiraId,
+      usuarioId: usuarioAtual.id,
+      categoriaTransacaoId: dados.categoriaTransacaoId,
     });
 
     form.reset();
-    onOpenChange(false);
+    onAbertoChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={aberto} onOpenChange={onAbertoChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Adicionar Receita Pontual</DialogTitle>
@@ -78,7 +76,7 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="description"
+              name="descricao"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
@@ -92,7 +90,7 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
 
             <FormField
               control={form.control}
-              name="amount"
+              name="valor"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Valor</FormLabel>
@@ -112,7 +110,7 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
 
             <FormField
               control={form.control}
-              name="transactionCategoryId"
+              name="categoriaTransacaoId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
@@ -123,9 +121,9 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {incomeCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
+                      {categoriasDeReceita.map((categoria) => (
+                        <SelectItem key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -137,7 +135,7 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
 
             <FormField
               control={form.control}
-              name="walletId"
+              name="carteiraId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Carteira</FormLabel>
@@ -148,9 +146,9 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {availableWallets.map((wallet) => (
-                        <SelectItem key={wallet.id} value={wallet.id}>
-                          {wallet.name}
+                      {carteirasDisponiveis.map((carteira) => (
+                        <SelectItem key={carteira.id} value={carteira.id}>
+                          {carteira.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -162,7 +160,7 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
 
             <FormField
               control={form.control}
-              name="date"
+              name="data"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Data</FormLabel>
@@ -200,7 +198,7 @@ export function IncomeModal({ open, onOpenChange }: IncomeModalProps) {
             />
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+              <Button type="button" variant="outline" onClick={() => onAbertoChange(false)} className="flex-1">
                 Cancelar
               </Button>
               <Button type="submit" className="flex-1">

@@ -1,11 +1,7 @@
-
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -14,55 +10,93 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 
-const recurringSchema = z.object({
-  description: z.string().min(1, 'Descrição é obrigatória'),
-  amount: z.number().positive('Valor deve ser positivo'),
-  type: z.enum(['income', 'expense']),
-  transactionCategoryId: z.string().min(1, 'Categoria é obrigatória'),
-  walletId: z.string().min(1, 'Carteira é obrigatória'),
-  frequency: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'bimonthly', 'quarterly', 'semester', 'yearly']),
-  startDate: z.date(),
-  endDate: z.date().optional(),
-  isInfinite: z.boolean(),
+const esquemaEdicaoRecorrente = z.object({
+  descricao: z.string().min(1, 'Descrição é obrigatória'),
+  valor: z.number().positive('Valor deve ser positivo'),
+  tipo: z.enum(['receita', 'despesa']),
+  categoriaTransacaoId: z.string().optional(),
+  frequencia: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'bimonthly', 'quarterly', 'semester', 'yearly']),
+  dataFim: z.date().optional(),
+  eInfinito: z.boolean(),
 });
 
-type RecurringFormData = z.infer<typeof recurringSchema>;
+type DadosFormularioEdicaoRecorrente = z.infer<typeof esquemaEdicaoRecorrente>;
 
-interface RecurringModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ModalEditarDespesaRecorrenteProps {
+  despesaId: string;
+  aberto: boolean;
+  onAbertoChange: (aberto: boolean) => void;
 }
 
-export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
-  const { addTransaction, transactionCategories, wallets, currentUser } = useTransactions();
+export function ModalEditarDespesaRecorrente({ despesaId, aberto, onAbertoChange }: ModalEditarDespesaRecorrenteProps) {
+  const { transacoes, atualizarTransacao, categoriasTransacao } = useTransacoes();
+  
+  const transacaoRecorrente = transacoes.find(t => 
+    t.id === despesaId && t.recorrencia?.tipo !== 'none'
+  );
 
-  const form = useForm<RecurringFormData>({
-    resolver: zodResolver(recurringSchema),
+  const form = useForm<DadosFormularioEdicaoRecorrente>({
+    resolver: zodResolver(esquemaEdicaoRecorrente),
     defaultValues: {
-      description: '',
-      amount: 0,
-      type: 'expense',
-      transactionCategoryId: '',
-      walletId: '',
-      frequency: 'monthly',
-      startDate: new Date(),
-      isInfinite: false,
+      descricao: '',
+      valor: 0,
+      tipo: 'despesa',
+      categoriaTransacaoId: '',
+      frequencia: 'monthly',
+      dataFim: undefined,
+      eInfinito: false,
     },
   });
 
-  const selectedType = form.watch('type');
-  const isInfinite = form.watch('isInfinite');
+  useEffect(() => {
+    if (transacaoRecorrente) {
+      form.reset({
+        descricao: transacaoRecorrente.descricao,
+        valor: transacaoRecorrente.valor,
+        tipo: transacaoRecorrente.tipo,
+        categoriaTransacaoId: transacaoRecorrente.categoriaTransacaoId || '',
+        frequencia: transacaoRecorrente.recorrencia?.tipo as any || 'monthly',
+        dataFim: transacaoRecorrente.recorrencia?.dataFim,
+        eInfinito: transacaoRecorrente.recorrencia?.eInfinito || false,
+      });
+    }
+  }, [transacaoRecorrente, form]);
 
-  const availableCategories = transactionCategories.filter(cat => 
-    cat.type === selectedType || cat.type === 'both'
+  const onSubmit = (dados: DadosFormularioEdicaoRecorrente) => {
+    if (!transacaoRecorrente) return;
+
+    const transacaoAtualizada = {
+      ...transacaoRecorrente,
+      descricao: dados.descricao,
+      valor: dados.valor,
+      tipo: dados.tipo,
+      categoriaTransacaoId: dados.categoriaTransacaoId,
+      recorrencia: {
+        ...transacaoRecorrente.recorrencia!,
+        tipo: dados.frequencia,
+        dataFim: dados.dataFim,
+        eInfinito: dados.eInfinito,
+      },
+    };
+
+    atualizarTransacao(transacaoAtualizada);
+    onAbertoChange(false);
+  };
+
+  const tipoSelecionado = form.watch('tipo');
+  const eRecorrenciaInfinita = form.watch('eInfinito');
+
+  const categoriasDisponiveis = categoriasTransacao.filter(categoria => 
+    categoria.tipo === tipoSelecionado || categoria.tipo === 'ambos'
   );
 
-  const availableWallets = wallets.filter(w => w.name !== 'Investimentos');
-
-  const frequencyOptions = [
+  const opcoesFrequencia = [
     { value: 'daily', label: 'Diário' },
     { value: 'weekly', label: 'Semanal' },
     { value: 'biweekly', label: 'Quinzenal' },
@@ -73,39 +107,19 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
     { value: 'yearly', label: 'Anual' },
   ];
 
-  const onSubmit = (data: RecurringFormData) => {
-    if (!currentUser) return;
-
-    addTransaction({
-      description: data.description,
-      amount: data.amount,
-      type: data.type,
-      date: data.startDate,
-      walletId: data.walletId,
-      userId: currentUser.id,
-      transactionCategoryId: data.transactionCategoryId,
-      recurrence: {
-        type: data.frequency,
-        endDate: data.isInfinite ? undefined : data.endDate,
-        isInfinite: data.isInfinite,
-      },
-    });
-
-    form.reset();
-    onOpenChange(false);
-  };
+  if (!transacaoRecorrente) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={aberto} onOpenChange={onAbertoChange}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Configurar Recorrente</DialogTitle>
+          <DialogTitle>Editar Transação Recorrente</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="description"
+              name="descricao"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
@@ -119,7 +133,7 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
 
             <FormField
               control={form.control}
-              name="amount"
+              name="valor"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Valor</FormLabel>
@@ -139,7 +153,7 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
 
             <FormField
               control={form.control}
-              name="type"
+              name="tipo"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo</FormLabel>
@@ -150,8 +164,8 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="income">Entrada</SelectItem>
-                      <SelectItem value="expense">Saída</SelectItem>
+                      <SelectItem value="receita">Entrada</SelectItem>
+                      <SelectItem value="despesa">Saída</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -161,7 +175,7 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
 
             <FormField
               control={form.control}
-              name="transactionCategoryId"
+              name="categoriaTransacaoId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
@@ -172,9 +186,9 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {availableCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
+                      {categoriasDisponiveis.map((categoria) => (
+                        <SelectItem key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -186,32 +200,7 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
 
             <FormField
               control={form.control}
-              name="walletId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Carteira</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a carteira" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {availableWallets.map((wallet) => (
-                        <SelectItem key={wallet.id} value={wallet.id}>
-                          {wallet.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="frequency"
+              name="frequencia"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Frequência</FormLabel>
@@ -222,9 +211,9 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {frequencyOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                      {opcoesFrequencia.map((opcao) => (
+                        <SelectItem key={opcao.value} value={opcao.value}>
+                          {opcao.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -236,46 +225,7 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
 
             <FormField
               control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data de Início</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "dd/MM/yyyy", { locale: ptBR })
-                          ) : (
-                            <span>Selecione uma data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        className="p-3"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isInfinite"
+              name="eInfinito"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                   <FormControl>
@@ -285,16 +235,18 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Sem fim (vitalícia)</FormLabel>
+                    <FormLabel>
+                      Sem fim (vitalícia)
+                    </FormLabel>
                   </div>
                 </FormItem>
               )}
             />
 
-            {!isInfinite && (
+            {!eRecorrenciaInfinita && (
               <FormField
                 control={form.control}
-                name="endDate"
+                name="dataFim"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Data Final</FormLabel>
@@ -333,11 +285,11 @@ export function RecurringModal({ open, onOpenChange }: RecurringModalProps) {
             )}
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+              <Button type="button" variant="outline" onClick={() => onAbertoChange(false)} className="flex-1">
                 Cancelar
               </Button>
               <Button type="submit" className="flex-1">
-                Salvar Recorrente
+                Salvar
               </Button>
             </div>
           </form>

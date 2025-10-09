@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Clock, Target } from 'lucide-react';
+import { Plus, Clock, Target, CalendarIcon, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -13,104 +12,101 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CalendarIcon, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useTransactions } from '@/contexts/TransactionContext';
-import { transactionSchema, type TransactionFormData } from '@/lib/validations/transaction';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
+import { esquemaTransacao, type DadosFormularioTransacao } from '@/lib/validations/transacao';
 
-export function TransactionModal() {
-  const [open, setOpen] = useState(false);
-  const [showRecurrence, setShowRecurrence] = useState(false);
-  const [lastWalletId, setLastWalletId] = useState<string>('');
-  const [lastUserId, setLastUserId] = useState<string>('');
+export function ModalTransacao() {
+  const [aberto, setAberto] = useState(false);
+  const [mostrarRecorrencia, setMostrarRecorrencia] = useState(false);
+  const [ultimoIdCarteira, setUltimoIdCarteira] = useState<string>('');
+  const [ultimoIdUsuario, setUltimoIdUsuario] = useState<string>('');
   
-  const { addTransaction, wallets, currentUser, investmentCategories, transactionCategories } = useTransactions();
+  const { adicionarTransacao, carteiras, usuarioAtual, categoriasInvestimento, categoriasTransacao } = useTransacoes();
 
-  const form = useForm<TransactionFormData>({
-    resolver: zodResolver(transactionSchema),
+  const form = useForm<DadosFormularioTransacao>({
+    resolver: zodResolver(esquemaTransacao),
     defaultValues: {
-      description: '',
-      amount: 0,
-      type: 'expense',
-      date: new Date(),
-      walletId: lastWalletId || '',
-      userId: currentUser?.id || '',
-      categoryId: '',
-      transactionCategoryId: '',
-      recurrence: {
-        type: 'none',
-        isInfinite: false,
+      descricao: '',
+      valor: 0,
+      tipo: 'despesa',
+      data: new Date(),
+      carteiraId: ultimoIdCarteira || '',
+      usuarioId: usuarioAtual?.id || '',
+      categoriaId: '',
+      categoriaTransacaoId: '',
+      recorrencia: {
+        tipo: 'none',
+        eInfinito: false,
       },
     },
   });
 
-  const watchedFields = form.watch(['description', 'amount', 'walletId', 'userId']);
-  const isFormValid = watchedFields[0] && watchedFields[1] > 0 && watchedFields[2] && watchedFields[3];
+  const camposObservados = form.watch(['descricao', 'valor', 'carteiraId', 'usuarioId']);
+  const eFormularioValido = camposObservados[0] && camposObservados[1] > 0 && camposObservados[2] && camposObservados[3];
 
   useEffect(() => {
-    if (currentUser?.id) {
-      form.setValue('userId', currentUser.id);
-      setLastUserId(currentUser.id);
+    if (usuarioAtual?.id) {
+      form.setValue('usuarioId', usuarioAtual.id);
+      setUltimoIdUsuario(usuarioAtual.id);
     }
-  }, [currentUser, form]);
+  }, [usuarioAtual, form]);
 
-  const onSubmit = (data: TransactionFormData) => {
-    const transactionData = {
-      description: data.description,
-      amount: data.amount,
-      type: data.type,
-      date: data.date,
-      walletId: data.walletId,
-      userId: data.userId,
-      categoryId: data.categoryId,
-      transactionCategoryId: data.transactionCategoryId,
-      recurrence: {
-        type: data.recurrence?.type || 'none',
-        repetitions: data.recurrence?.repetitions,
-        endDate: data.recurrence?.endDate,
-        isInfinite: data.recurrence?.isInfinite || false,
+  const onSubmit = (dados: DadosFormularioTransacao) => {
+    const dadosTransacao = {
+      descricao: dados.descricao,
+      valor: dados.valor,
+      tipo: dados.tipo,
+      data: dados.data,
+      carteiraId: dados.carteiraId,
+      usuarioId: dados.usuarioId,
+      categoriaId: dados.categoriaId,
+      categoriaTransacaoId: dados.categoriaTransacaoId,
+      recorrencia: {
+        tipo: dados.recorrencia?.tipo || 'none',
+        repeticoes: dados.recorrencia?.repeticoes,
+        dataFim: dados.recorrencia?.dataFim,
+        eInfinito: dados.recorrencia?.eInfinito || false,
       },
     };
     
-    // Salvar últimas seleções
-    setLastWalletId(data.walletId);
-    setLastUserId(data.userId);
+    setUltimoIdCarteira(dados.carteiraId);
+    setUltimoIdUsuario(dados.usuarioId);
     
-    addTransaction(transactionData);
+    adicionarTransacao(dadosTransacao);
     form.reset({
-      description: '',
-      amount: 0,
-      type: 'expense',
-      date: new Date(),
-      walletId: data.walletId,
-      userId: data.userId,
-      categoryId: '',
-      transactionCategoryId: '',
-      recurrence: {
-        type: 'none',
-        isInfinite: false,
+      descricao: '',
+      valor: 0,
+      tipo: 'despesa',
+      data: new Date(),
+      carteiraId: dados.carteiraId,
+      usuarioId: dados.usuarioId,
+      categoriaId: '',
+      categoriaTransacaoId: '',
+      recorrencia: {
+        tipo: 'none',
+        eInfinito: false,
       },
     });
-    setShowRecurrence(false);
-    setOpen(false);
+    setMostrarRecorrencia(false);
+    setAberto(false);
   };
 
-  const recurrenceType = form.watch('recurrence.type');
-  const isInfiniteRecurrence = form.watch('recurrence.isInfinite');
-  const selectedWallet = form.watch('walletId');
-  const selectedType = form.watch('type');
-  const isInvestmentWallet = wallets.find(w => w.id === selectedWallet)?.name === 'Investimentos';
+  const tipoRecorrencia = form.watch('recorrencia.tipo');
+  const eRecorrenciaInfinita = form.watch('recorrencia.eInfinito');
+  const carteiraSelecionada = form.watch('carteiraId');
+  const tipoSelecionado = form.watch('tipo');
+  const eCarteiraInvestimento = carteiras.find(c => c.id === carteiraSelecionada)?.nome === 'Investimentos';
 
-  // Filtrar categorias baseado no tipo selecionado
-  const availableCategories = transactionCategories.filter(category => 
-    category.type === selectedType || category.type === 'both'
+  const categoriasDisponiveis = categoriasTransacao.filter(categoria => 
+    categoria.tipo === tipoSelecionado || categoria.tipo === 'ambos'
   );
 
   return (
     <TooltipProvider>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={aberto} onOpenChange={setAberto}>
         <DialogTrigger asChild>
           <Button size="lg" className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg">
             <Plus className="h-6 w-6" />
@@ -124,7 +120,7 @@ export function TransactionModal() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="description"
+                name="descricao"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Descrição</FormLabel>
@@ -138,7 +134,7 @@ export function TransactionModal() {
 
               <FormField
                 control={form.control}
-                name="amount"
+                name="valor"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Valor</FormLabel>
@@ -158,7 +154,7 @@ export function TransactionModal() {
 
               <FormField
                 control={form.control}
-                name="type"
+                name="tipo"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo</FormLabel>
@@ -169,8 +165,8 @@ export function TransactionModal() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="income">Entrada</SelectItem>
-                        <SelectItem value="expense">Saída</SelectItem>
+                        <SelectItem value="receita">Entrada</SelectItem>
+                        <SelectItem value="despesa">Saída</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -178,10 +174,9 @@ export function TransactionModal() {
                 )}
               />
 
-              {/* Campo de Categoria de Transação */}
               <FormField
                 control={form.control}
-                name="transactionCategoryId"
+                name="categoriaTransacaoId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
@@ -192,9 +187,9 @@ export function TransactionModal() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableCategories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
+                        {categoriasDisponiveis.map((categoria) => (
+                          <SelectItem key={categoria.id} value={categoria.id}>
+                            {categoria.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -206,7 +201,7 @@ export function TransactionModal() {
 
               <FormField
                 control={form.control}
-                name="walletId"
+                name="carteiraId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Carteira</FormLabel>
@@ -217,11 +212,11 @@ export function TransactionModal() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {wallets.map((wallet) => (
-                          <SelectItem key={wallet.id} value={wallet.id}>
+                        {carteiras.map((carteira) => (
+                          <SelectItem key={carteira.id} value={carteira.id}>
                             <div className="flex items-center gap-2">
-                              {wallet.name}
-                              {wallet.name === 'Investimentos' && (
+                              {carteira.nome}
+                              {carteira.nome === 'Investimentos' && (
                                 <Tooltip>
                                   <TooltipTrigger>
                                     <Info className="h-3 w-3 text-muted-foreground" />
@@ -241,11 +236,10 @@ export function TransactionModal() {
                 )}
               />
 
-              {/* Campo de Categoria de Investimento - só aparece se a carteira de Investimentos estiver selecionada */}
-              {isInvestmentWallet && (
+              {eCarteiraInvestimento && (
                 <FormField
                   control={form.control}
-                  name="categoryId"
+                  name="categoriaId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
@@ -259,9 +253,9 @@ export function TransactionModal() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {investmentCategories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
+                          {categoriasInvestimento.map((categoria) => (
+                            <SelectItem key={categoria.id} value={categoria.id}>
+                              {categoria.nome}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -274,12 +268,12 @@ export function TransactionModal() {
 
               <FormField
                 control={form.control}
-                name="userId"
+                name="usuarioId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Usuário</FormLabel>
                     <FormControl>
-                      <Input {...field} value={currentUser?.name || ''} disabled />
+                      <Input {...field} value={usuarioAtual?.nome || ''} disabled />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -287,7 +281,7 @@ export function TransactionModal() {
               />
 
               <div className="space-y-2">
-                <Collapsible open={showRecurrence} onOpenChange={setShowRecurrence}>
+                <Collapsible open={mostrarRecorrencia} onOpenChange={setMostrarRecorrencia}>
                   <CollapsibleTrigger asChild>
                     <Button 
                       type="button" 
@@ -295,13 +289,13 @@ export function TransactionModal() {
                       className="w-full flex items-center gap-2"
                     >
                       <Clock className="h-4 w-4" />
-                      {showRecurrence ? 'Ocultar recorrência' : 'Adicionar recorrência'}
+                      {mostrarRecorrencia ? 'Ocultar recorrência' : 'Adicionar recorrência'}
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-4 pt-4">
                     <FormField
                       control={form.control}
-                      name="recurrence.type"
+                      name="recorrencia.tipo"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipo de Recorrência</FormLabel>
@@ -324,10 +318,10 @@ export function TransactionModal() {
                       )}
                     />
 
-                    {recurrenceType !== 'none' && (
+                    {tipoRecorrencia !== 'none' && (
                       <FormField
                         control={form.control}
-                        name="recurrence.isInfinite"
+                        name="recorrencia.eInfinito"
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
@@ -346,10 +340,10 @@ export function TransactionModal() {
                       />
                     )}
 
-                    {recurrenceType === 'custom' && !isInfiniteRecurrence && (
+                    {tipoRecorrencia === 'custom' && !eRecorrenciaInfinita && (
                       <FormField
                         control={form.control}
-                        name="recurrence.repetitions"
+                        name="recorrencia.repeticoes"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Quantidade de Repetições</FormLabel>
@@ -367,10 +361,10 @@ export function TransactionModal() {
                       />
                     )}
 
-                    {recurrenceType !== 'none' && !isInfiniteRecurrence && (
+                    {tipoRecorrencia !== 'none' && !eRecorrenciaInfinita && (
                       <FormField
                         control={form.control}
-                        name="recurrence.endDate"
+                        name="recorrencia.dataFim"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
                             <FormLabel>Data Final</FormLabel>
@@ -413,7 +407,7 @@ export function TransactionModal() {
 
               <FormField
                 control={form.control}
-                name="date"
+                name="data"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Data</FormLabel>
@@ -451,10 +445,10 @@ export function TransactionModal() {
               />
 
               <div className="flex gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
+                <Button type="button" variant="outline" onClick={() => setAberto(false)} className="flex-1">
                   Cancelar
                 </Button>
-                <Button type="submit" className="flex-1" disabled={!isFormValid}>
+                <Button type="submit" className="flex-1" disabled={!eFormularioValido}>
                   Salvar
                 </Button>
               </div>

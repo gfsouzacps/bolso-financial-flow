@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* Definição do sistema de design. Todas as cores, gradientes, fontes, etc. devem ser definidos aqui. */
 
 @layer base {
   :root {
@@ -46,7 +46,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Custom financial colors */
+    /* Cores financeiras personalizadas */
     --income: 142 76% 36%;
     --income-foreground: 0 0% 100%;
     --expense: 0 84.2% 60.2%;

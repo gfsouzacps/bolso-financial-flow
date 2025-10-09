@@ -1,19 +1,18 @@
-
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { useTransactions } from '@/contexts/TransactionContext';
+import { useTransacoes } from '@/contexts/ContextoTransacao';
 import { cn } from '@/lib/utils';
 
-export function UserSelector() {
-  const { users, filters, updateFilters } = useTransactions();
+export function SeletorUsuario() {
+  const { usuarios, filtros, atualizarFiltros } = useTransacoes();
 
-  const handleUserToggle = (userId: string) => {
-    if (filters.userId === userId) {
+  const tratarAlternanciaUsuario = (usuarioId: string) => {
+    if (filtros.usuarioId === usuarioId) {
       // Se já está selecionado, remove o filtro (mostra todos)
-      updateFilters({ userId: undefined });
+      atualizarFiltros({ usuarioId: undefined });
     } else {
       // Seleciona o usuário específico
-      updateFilters({ userId });
+      atualizarFiltros({ usuarioId });
     }
   };
 
@@ -22,27 +21,27 @@ export function UserSelector() {
       <span className="text-sm font-medium">Exibindo transações de:</span>
       <div className="flex gap-2">
         <Button
-          variant={!filters.userId ? "default" : "outline"}
+          variant={!filtros.usuarioId ? "default" : "outline"}
           size="sm"
-          onClick={() => updateFilters({ userId: undefined })}
+          onClick={() => atualizarFiltros({ usuarioId: undefined })}
           className="flex items-center gap-2"
         >
           Todos
         </Button>
-        {users.map((user) => (
+        {usuarios.map((usuario) => (
           <Button
-            key={user.id}
-            variant={filters.userId === user.id ? "default" : "outline"}
+            key={usuario.id}
+            variant={filtros.usuarioId === usuario.id ? "default" : "outline"}
             size="sm"
-            onClick={() => handleUserToggle(user.id)}
+            onClick={() => tratarAlternanciaUsuario(usuario.id)}
             className="flex items-center gap-2"
           >
             <Avatar className="h-6 w-6">
-              <AvatarFallback className={cn("text-white text-xs", user.color)}>
-                {user.name.charAt(0)}
+              <AvatarFallback className={cn("text-white text-xs", usuario.cor)}>
+                {usuario.nome.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            {user.name}
+            {usuario.nome}
           </Button>
         ))}
       </div>
