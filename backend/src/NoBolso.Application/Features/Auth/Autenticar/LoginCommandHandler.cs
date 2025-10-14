@@ -1,4 +1,5 @@
 using MediatR;
+using NoBolso.Application.Dtos;
 using NoBolso.Application.Features.Auth.Commands;
 using NoBolso.Application.Features.Auth.Dtos;
 using NoBolso.Domain.Interfaces;

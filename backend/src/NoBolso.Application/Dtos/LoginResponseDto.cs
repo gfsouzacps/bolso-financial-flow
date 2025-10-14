@@ -1,4 +1,4 @@
-﻿namespace NoBolso.Application.Features.Auth.Dtos;
+﻿namespace NoBolso.Application.Dtos;
 
 public record LoginResponseDto(
     string AccessToken,

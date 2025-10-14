@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NoBolso.Application.Dtos;
 using NoBolso.Application.Features.Auth.Commands;
 using NoBolso.Application.Features.Auth.Queries;
 using System.Security.Claims;
@@ -41,7 +42,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    [ProducesResponseType(typeof(NoBolso.Application.Features.Auth.Dtos.UsuarioDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UsuarioDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {

@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http; // Para acessar o usuário da requisição
-using NoBolso.Application.Features.Auth.Dtos;
+using NoBolso.Application.Dtos;
 using NoBolso.Application.Features.Auth.Queries;
 using NoBolso.Domain.Interfaces;
 using System;

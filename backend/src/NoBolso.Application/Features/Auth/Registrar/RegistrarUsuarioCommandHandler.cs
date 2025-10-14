@@ -1,10 +1,11 @@
 using MediatR;
+using NoBolso.Application.Features.Auth.Commands;
 using NoBolso.Domain.Entities;
 using NoBolso.Domain.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NoBolso.Application.Features.Auth.Commands
+namespace NoBolso.Application.Features.Auth.Handlers.CommandHandler
 {
     public class RegistrarUsuarioCommandHandler : IRequestHandler<RegistrarUsuarioCommand, Guid>
     {

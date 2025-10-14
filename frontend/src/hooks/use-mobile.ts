@@ -1,28 +1,19 @@
-import { useState, useEffect } from 'react';
+import * as React from "react"
 
-const useMobile = (query: string = '(max-width: 768px)') => {
-  const [isMobile, setIsMobile] = useState(false);
+const MOBILE_BREAKPOINT = 768
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+export function useIsMobile() {
+    const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
-    const mediaQuery = window.matchMedia(query);
-    const handleResize = () => {
-      setIsMobile(mediaQuery.matches);
-    };
+    React.useEffect(() => {
+        const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+        const onChange = () => {
+            setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+        }
+        mql.addEventListener("change", onChange)
+        setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+        return () => mql.removeEventListener("change", onChange)
+    }, [])
 
-    handleResize();
-
-    mediaQuery.addEventListener('change', handleResize);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleResize);
-    };
-  }, [query]);
-
-  return isMobile;
-};
-
-export default useMobile;
+    return !!isMobile
+}
