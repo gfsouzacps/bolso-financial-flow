@@ -34,11 +34,10 @@ public static class SwaggerConfigExtensions
         {
             app.UseSwagger();
 
-            app.UseReDoc(options =>
+            app.UseSwaggerUI(c =>
             {
-                options.DocumentTitle = "Documentação NoBolso API";
-                options.SpecUrl = "/swagger/v1/swagger.json";
-                options.RoutePrefix = "docs";
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "NoBolso API V1");
+                c.RoutePrefix = "swagger";
             });
         }
 

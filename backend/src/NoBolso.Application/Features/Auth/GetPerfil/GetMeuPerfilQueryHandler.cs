@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http; // Para acessar o usuário da requisição
-using NoBolso.Application.Dtos;
-using NoBolso.Application.Features.Auth.Queries;
+using NoBolso.Application.Features.Auth.Dtos;
 using NoBolso.Domain.Interfaces;
 using System;
 using System.Linq; // Adicione esta diretiva
@@ -9,7 +8,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NoBolso.Application.Features.Auth.Handlers.QuerieHandler
+namespace NoBolso.Application.Features.Auth.GetPerfil
 {
     public class GetMeuPerfilQueryHandler : IRequestHandler<GetMeuPerfilQuery, UsuarioDto>
     {

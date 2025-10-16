@@ -1,41 +1,36 @@
 using MediatR;
+using NoBolso.Application.Common.Exceptions;
 using NoBolso.Application.Dtos;
-using NoBolso.Application.Features.Auth.Commands;
 using NoBolso.Application.Features.Auth.Dtos;
 using NoBolso.Domain.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NoBolso.Application.Features.Auth.Handlers.CommandHandler;
+namespace NoBolso.Application.Features.Auth.Autenticar;
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDto>
 {
-    private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
     public LoginCommandHandler(
-        IUsuarioRepository usuarioRepository,
+        IUnitOfWork unitOfWork,
         IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtTokenGenerator)
     {
-        _usuarioRepository = usuarioRepository;
+        _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
     }
 
     public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var usuario = await _usuarioRepository.GetByEmailAsync(request.Email);
-        if (usuario is null)
-        {
-            // Use exceções mais específicas para melhor tratamento no middleware
-            throw new UnauthorizedAccessException("Credenciais inválidas.");
-        }
+        var usuario = await _unitOfWork.UsuarioRepository.GetByEmailAsync(request.Email);
 
-        if (!_passwordHasher.VerifyPassword(request.Senha, usuario.PasswordHash))
+        if (usuario is null || !_passwordHasher.VerifyPassword(request.Senha, usuario.PasswordHash))
         {
-            throw new UnauthorizedAccessException("Credenciais inválidas.");
+            throw new BadRequestException("Email ou senha inválidos.");
         }
 
         // Gera o token JWT corretamente

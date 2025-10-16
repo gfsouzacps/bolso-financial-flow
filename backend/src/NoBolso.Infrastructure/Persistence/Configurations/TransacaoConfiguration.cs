@@ -20,13 +20,14 @@ public class TransacaoConfiguration : IEntityTypeConfiguration<Transacao>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
-        builder.Property(t => t.Categoria)
-            .HasMaxLength(100);
-
-        // Relacionamento com Usuario
         builder.HasOne(t => t.Usuario)
             .WithMany()
             .HasForeignKey(t => t.UsuarioId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Adiciona o relacionamento opcional com Recorrencia (One-to-One)
+        builder.HasOne(t => t.Recorrencia)
+            .WithOne()
+            .HasForeignKey<Recorrencia>(r => r.TransacaoId);
     }
 }

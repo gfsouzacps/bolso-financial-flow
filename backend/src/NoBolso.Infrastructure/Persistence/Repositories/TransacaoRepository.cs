@@ -1,6 +1,12 @@
+using Microsoft.EntityFrameworkCore;
 using NoBolso.Domain.Entities;
+using NoBolso.Domain.Enums;
 using NoBolso.Domain.Interfaces;
-using NoBolso.Infrastructure.Persistence;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NoBolso.Infrastructure.Persistence.Repositories;
 
@@ -13,13 +19,43 @@ public class TransacaoRepository : ITransacaoRepository
         _context = context;
     }
 
-    public Task AddAsync(Transacao transacao)
+    public void Add(Transacao transacao)
     {
-        throw new NotImplementedException();
+        _context.Transacoes.Add(transacao);
     }
 
-    public Task<Transacao?> GetByIdAsync(Guid id)
+    public async Task<IEnumerable<Transacao>> GetAllByUsuarioIdAsync(
+        Guid usuarioId,
+        DateTime? dataInicio,
+        DateTime? dataFim,
+        TipoTransacao? tipo,
+        Guid? carteiraId,
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var query = _context.Transacoes
+            .AsNoTracking()
+            .Where(t => t.UsuarioId == usuarioId);
+
+        if (dataInicio.HasValue)
+        {
+            query = query.Where(t => t.Data >= dataInicio.Value);
+        }
+
+        if (dataFim.HasValue)
+        {
+            query = query.Where(t => t.Data <= dataFim.Value);
+        }
+
+        if (tipo.HasValue)
+        {
+            query = query.Where(t => t.Tipo == tipo.Value);
+        }
+
+        if (carteiraId.HasValue)
+        {
+            query = query.Where(t => t.CarteiraId == carteiraId.Value);
+        }
+
+        return await query.OrderByDescending(t => t.Data).ToListAsync(cancellationToken);
     }
 }

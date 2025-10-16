@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace NoBolso.Application.Features.Auth.Commands;
+namespace NoBolso.Application.Features.Auth.Registrar;
 
 public class RegistrarUsuarioCommandValidator : AbstractValidator<RegistrarUsuarioCommand>
 {

@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<ITransacaoRepository, TransacaoRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddMemoryCache();
 

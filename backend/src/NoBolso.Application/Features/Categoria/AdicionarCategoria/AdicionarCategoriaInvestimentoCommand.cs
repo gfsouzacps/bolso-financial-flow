@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using NoBolso.Application.Dtos;
+using NoBolso.Application.Features.Categoria.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;

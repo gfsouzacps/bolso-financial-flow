@@ -1,9 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NoBolso.Application.Dtos;
-using NoBolso.Application.Features.Auth.Commands;
-using NoBolso.Application.Features.Auth.Queries;
+using NoBolso.Application.Features.Auth.Autenticar;
+using NoBolso.Application.Features.Auth.Dtos;
+using NoBolso.Application.Features.Auth.GetPerfil;
+using NoBolso.Application.Features.Auth.Registrar;
 using System.Security.Claims;
 // using NoBolso.Application.Features.Auth.Queries; // Adicionaremos este
 

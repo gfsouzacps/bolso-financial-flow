@@ -1,6 +1,7 @@
 using NoBolso.Application;
 using NoBolso.Infrastructure;
 using NoBolso.Api.Extensions;
+using NoBolso.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,7 @@ builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSwaggerConfig();
 
 app.UseHttpsRedirection();

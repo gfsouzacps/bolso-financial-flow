@@ -22,6 +22,30 @@ namespace NoBolso.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("NoBolso.Domain.Entities.Carteira", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EspacoFinanceiroId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("SaldoInicial")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EspacoFinanceiroId");
+
+                    b.ToTable("Carteiras", (string)null);
+                });
+
             modelBuilder.Entity("NoBolso.Domain.Entities.CategoriaInvestimento", b =>
                 {
                     b.Property<int>("Id")
@@ -42,6 +66,37 @@ namespace NoBolso.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CategoriasInvestimentos", (string)null);
+                });
+
+            modelBuilder.Entity("NoBolso.Domain.Entities.CategoriaTransacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Cor")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("EspacoFinanceiroId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EspacoFinanceiroId");
+
+                    b.ToTable("CategoriasTransacao", (string)null);
                 });
 
             modelBuilder.Entity("NoBolso.Domain.Entities.DespesaRecorrente", b =>
@@ -82,6 +137,22 @@ namespace NoBolso.Infrastructure.Migrations
                     b.ToTable("DespesasRecorrentes", (string)null);
                 });
 
+            modelBuilder.Entity("NoBolso.Domain.Entities.EspacoFinanceiro", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EspacosFinanceiros", (string)null);
+                });
+
             modelBuilder.Entity("NoBolso.Domain.Entities.Investimento", b =>
                 {
                     b.Property<Guid>("Id")
@@ -117,15 +188,44 @@ namespace NoBolso.Infrastructure.Migrations
                     b.ToTable("Investimentos", (string)null);
                 });
 
+            modelBuilder.Entity("NoBolso.Domain.Entities.Recorrencia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DataFim")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("EInfinito")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TransacaoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransacaoId")
+                        .IsUnique();
+
+                    b.ToTable("Recorrencia");
+                });
+
             modelBuilder.Entity("NoBolso.Domain.Entities.Transacao", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Categoria")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<Guid>("CarteiraId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CategoriaTransacaoId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("Data")
                         .HasColumnType("timestamp with time zone");
@@ -162,6 +262,9 @@ namespace NoBolso.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("EspacoFinanceiroId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -176,7 +279,31 @@ namespace NoBolso.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("EspacoFinanceiroId");
+
                     b.ToTable("Usuarios", (string)null);
+                });
+
+            modelBuilder.Entity("NoBolso.Domain.Entities.Carteira", b =>
+                {
+                    b.HasOne("NoBolso.Domain.Entities.EspacoFinanceiro", "EspacoFinanceiro")
+                        .WithMany("Carteiras")
+                        .HasForeignKey("EspacoFinanceiroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EspacoFinanceiro");
+                });
+
+            modelBuilder.Entity("NoBolso.Domain.Entities.CategoriaTransacao", b =>
+                {
+                    b.HasOne("NoBolso.Domain.Entities.EspacoFinanceiro", "EspacoFinanceiro")
+                        .WithMany("CategoriasTransacao")
+                        .HasForeignKey("EspacoFinanceiroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EspacoFinanceiro");
                 });
 
             modelBuilder.Entity("NoBolso.Domain.Entities.DespesaRecorrente", b =>
@@ -209,6 +336,15 @@ namespace NoBolso.Infrastructure.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("NoBolso.Domain.Entities.Recorrencia", b =>
+                {
+                    b.HasOne("NoBolso.Domain.Entities.Transacao", null)
+                        .WithOne("Recorrencia")
+                        .HasForeignKey("NoBolso.Domain.Entities.Recorrencia", "TransacaoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("NoBolso.Domain.Entities.Transacao", b =>
                 {
                     b.HasOne("NoBolso.Domain.Entities.Usuario", "Usuario")
@@ -218,6 +354,31 @@ namespace NoBolso.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("NoBolso.Domain.Entities.Usuario", b =>
+                {
+                    b.HasOne("NoBolso.Domain.Entities.EspacoFinanceiro", "EspacoFinanceiro")
+                        .WithMany("Usuarios")
+                        .HasForeignKey("EspacoFinanceiroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EspacoFinanceiro");
+                });
+
+            modelBuilder.Entity("NoBolso.Domain.Entities.EspacoFinanceiro", b =>
+                {
+                    b.Navigation("Carteiras");
+
+                    b.Navigation("CategoriasTransacao");
+
+                    b.Navigation("Usuarios");
+                });
+
+            modelBuilder.Entity("NoBolso.Domain.Entities.Transacao", b =>
+                {
+                    b.Navigation("Recorrencia");
                 });
 #pragma warning restore 612, 618
         }

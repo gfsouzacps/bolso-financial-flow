@@ -15,6 +15,10 @@ public class AppDbContext : DbContext
     public DbSet<CategoriaInvestimento> CategoriasInvestimentos { get; set; }
     public DbSet<DespesaRecorrente> DespesasRecorrentes { get; set; }
 
+    public DbSet<EspacoFinanceiro> EspacosFinanceiros { get; set; }
+    public DbSet<Carteira> Carteiras { get; set; }
+    public DbSet<CategoriaTransacao> CategoriasTransacao { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
